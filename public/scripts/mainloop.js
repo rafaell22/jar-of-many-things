@@ -6,10 +6,11 @@ let animationFrame;
 let updateCb;
 
 const start = function(cb) {
+  console.log('starting...')
   prevTimestamp = null;
   updateCb = cb;
 
-  update();
+  update(0);
 }
 
 const pause = function() {

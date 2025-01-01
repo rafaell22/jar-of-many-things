@@ -1,41 +1,27 @@
-export default class Circle {
+import Shape from "./Shape";
+
+export default class Circle extends Shape {
     constructor(x, y, radius, options = {}) {
-        const { mass, rotation, fill, stroke, strokeWidth } = options;
-        const body = new p2.Body({
-          mass: mass ?? 2,
-          position: [x, y]
-      });
-
-        const shape = new p2.Circle({ radius: radius ?? 10 });
-        body.addShape(shape);
-
-        this.x = x;
-        this.y = y;
+        super(x, y, options);
         this.radius = radius;
-        this.body = body;
-        this.fill = fill;
-        this.stroke = stroke;
-        this.strokeWidth = strokeWidth;
+        this.shape = new p2.Circle({ radius: radius });
     }
 
-    update() {
-        this.x = this.body.interpolatedPosition[0];
-        this.y = this.body.interpolatedPosition[1];
-    }
-
-    draw(ctx, screen) {
-        const screenCoords = screen.worldToScreen([this.x, this.y]);
-
-        ctx.beginPath()
-        ctx.arc(screenCoords[0], screenCoords[1], this.radius, 0, 2 * Math.PI, false)
+    fill(screen) {
         if (this.fill) {
-            ctx.fillStyle = this.fill
-            ctx.fill()
+            screen.fillCircle(this.x, this.y, this.radius, this.fillStyle);
         }
+    }
+
+    stroke(screen) {
         if (this.stroke) {
-            ctx.lineWidth = this.strokeWidth
-            ctx.strokeStyle = this.stroke
-            ctx.stroke()
+            screen.strokeCircle(this.x, this.y, this.radius, this.strokeStyle, this.strokeWidth);
         }
+    }
+
+    rotate(screen) {
+      if(this.rotation) {
+        screen.rotate(this.rotation, this.x, this.y, 2 * this.radius, 2 * this.radius)
+      }
     }
 }
