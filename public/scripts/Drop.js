@@ -1,5 +1,5 @@
-import Body from "./Body";
-import Circle from "./Circle";
+import Body from "./Body.js";
+import Circle from "./Circle.js";
 
 export const DROP_TYPE = {
   RECT: 'RECT',
