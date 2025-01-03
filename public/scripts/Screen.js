@@ -63,4 +63,8 @@ export default class Screen {
     ctx.rotate(rotation);
     ctx.translate(- screenCoords[0] - w/2, - screenCoords[1] + h/2);
   }
+
+  setTransform(...args) {
+    this.ctx.setTransform(...args);
+  }
 }

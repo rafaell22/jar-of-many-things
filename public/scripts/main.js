@@ -7,7 +7,8 @@ import { start } from './mainloop.js';
 import Screen from './Screen.js';
 import Circle from './Circle.js';
 import Rect from './Rect.js';
-import Drop from './Drop.js';
+import Drop, {DROP_TYPE} from './Drop.js';
+import Jar from './Jar.js';
 // import Plane from './Plane.js';
 
 const urlSearchParamsAsText = window.location.search;
@@ -38,6 +39,7 @@ const drops = [];
 // world.addBody(floor.body);
 // shapes.push(floor);
 
+const jar = new Jar(100, 80, 200, 200, [[100, 50], [200, 100]])
 /*
 const leftWall = new Rect(60, 90, 20, 100, { isStatic: true, stroke: 'blue', strokeWidth: 1, angle: -30 });
 shapes.push(leftWall);
@@ -75,22 +77,23 @@ start((dt) => {
       d.update();
     });
     screen.clear();
-    // draw();
+    draw();
 });
 
 const addCircle = () => {
   const diameter = randomIntBetween(10, 30);
-  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, { mass: 2 + Math.pow((diameter - 5) / 5, 3), stroke: 'black', strokeWidth: 1 });
+  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, { mass: 5, stroke: 'black', strokeWidth: 1 });
   drops.push(drop);
   world.addBody(drop.body);
   setTimeout(addCircle, 1000);
 }
-addCircle();
+// addCircle();
 
 function draw() {
   drops.forEach(d => {
     d.draw(screen);
   });
+  jar.draw(screen);
 }
 
 function randomIntBetween(min, max) {

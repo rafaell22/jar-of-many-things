@@ -15,7 +15,7 @@ export default class Shape{
         this.rotate(screen);
         this.fill(screen);
         this.stroke(screen);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        screen.setTransform(1, 0, 0, 1, 0, 0);
     }
 
     rotate(screen) {}
