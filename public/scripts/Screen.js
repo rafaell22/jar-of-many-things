@@ -59,9 +59,9 @@ export default class Screen {
 
   rotate(rotation, x, y, w, h) {
     const screenCoords = this.worldToScreen([x, y]);
-    this.ctx.translate(screenCoords + w/2, screenCoords[1] - h/2);
-    ctx.rotate(rotation);
-    ctx.translate(- screenCoords[0] - w/2, - screenCoords[1] + h/2);
+    this.ctx.translate(screenCoords[0] + w/2, screenCoords[1] - h/2);
+    this.ctx.rotate(rotation);
+    this.ctx.translate(- screenCoords[0] - w/2, - screenCoords[1] + h/2);
   }
 
   setTransform(...args) {

@@ -39,7 +39,12 @@ const drops = [];
 // world.addBody(floor.body);
 // shapes.push(floor);
 
-const jar = new Jar(100, 80, 200, 200, [[100, 50], [200, 100]])
+const jar = new Jar(100, 80, 200, 200, [
+  [100, 100], 
+  [100, 50], 
+  [200, 50],
+  [200, 100]
+])
 /*
 const leftWall = new Rect(60, 90, 20, 100, { isStatic: true, stroke: 'blue', strokeWidth: 1, angle: -30 });
 shapes.push(leftWall);
@@ -87,7 +92,7 @@ const addCircle = () => {
   world.addBody(drop.body);
   setTimeout(addCircle, 1000);
 }
-// addCircle();
+addCircle();
 
 function draw() {
   drops.forEach(d => {

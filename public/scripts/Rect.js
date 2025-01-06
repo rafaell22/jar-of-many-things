@@ -11,19 +11,20 @@ export default class Rect extends Shape {
 
     stroke(screen) {
       if (this.strokeStyle) {
-        screen.strokeRect(this.x, this.y, this.w, this.h);
+        screen.strokeRect(this.x, this.y, this.w, this.h, this.strokeStyle, this.strokeWidth);
       }
     }
 
     fill(screen) {
       if (this.fillStyle) {
-        screen.fillRect(this.x, this.y, this.w, this.h);
+        screen.fillRect(this.x, this.y, this.w, this.h, this.fillStyle);
       }
     }
 
     rotate(screen) {
+      // return;
       if(this.rotation) {
-        screen.rotate(this.x, this.y, this.w, this.h);
+        screen.rotate(this.rotation, this.x, this.y, this.w, this.h);
       }
     }
 }
