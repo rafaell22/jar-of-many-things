@@ -41,4 +41,4 @@ const update = (timestamp) => {
 };
 
 
-export { start };
+export { pause, start };

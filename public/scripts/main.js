@@ -3,19 +3,59 @@ import { initSettings, updateColorSettings } from './settings.js';
 import { initFooter } from './footer.js'
 import { initResizeEvent } from './resize.js';
 import { setViewMode } from './viewMode.js';
-import { start } from './mainloop.js';
-import Screen from './Screen.js';
-import Circle from './Circle.js';
-import Rect from './Rect.js';
-import Drop, {DROP_TYPE} from './Drop.js';
-import Jar from './Jar.js';
-// import Plane from './Plane.js';
+import { start, pause } from './mainloop.js';
+import Screen from './classes/Screen.js';
+import Drop, {DROP_TYPE} from './classes/Drop.js';
+import Jar from './classes/Jar.js';
+import { randomIntBetween } from './utils/math.js';
+
+const p2 = /** @type {object} */ (globalThis).p2;
 
 const urlSearchParamsAsText = window.location.search;
 const urlSearchParams = new URLSearchParams(urlSearchParamsAsText);
 
+const canvas = /** @type {HTMLCanvasElement|null} */ (document.getElementById('world'));
+let ctx;
+if(canvas) {
+  ctx = canvas.getContext('2d');
+} else {
+  throw new Error('Canvas not found!');
+}
+
+const screen = new Screen(300, 600, '#00b140', ctx);
+const world = new p2.World({gravity: [0, -50]});
+
+const jar = new Jar(100, 80, 200, 200, [
+  [100, 100], 
+  [100, 50], 
+  [200, 50],
+  [200, 100]
+], world);
+jar.parts.forEach((p) => world.addBody(p.body.body))
+
+const draw = () => {
+  screen.drawGrid();
+  drops.forEach(d => {
+    d.draw(screen);
+  });
+  jar.draw(screen);
+}
+
+const onEdit = () => {
+  canvas?.classList.add('edit');
+  pause();
+
+  jar.edit();
+  draw();
+}
+const onEditEnd = () => {
+  canvas?.classList.remove('edit');
+  
+  jar.endEdit();
+}
+
 initSettings();
-initFooter();
+initFooter({ onEdit, onEditEnd });
 initResizeEvent();
 
 updateColorSettings({
@@ -29,52 +69,22 @@ updateColorSettings({
 setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
 
 ////////////////
-const ctx = document.getElementById("world")?.getContext("2d");
-
-const screen = new Screen(300, 600, '#00b140', ctx);
-const world = new p2.World({gravity: [0, -50]});
 
 const drops = [];
 // const floor = new Plane(0, 100, { isStatic: true, stroke: 'brown', strokeWidth: 1 });
 // world.addBody(floor.body);
 // shapes.push(floor);
 
-const jar = new Jar(100, 80, 200, 200, [
-  [100, 100], 
-  [100, 50], 
-  [200, 50],
-  [200, 100]
-])
-/*
-const leftWall = new Rect(60, 90, 20, 100, { isStatic: true, stroke: 'blue', strokeWidth: 1, angle: -30 });
-shapes.push(leftWall);
-world.addBody(leftWall.body);
-*/
-
-/*
-const topLeftWall = new Rect(60, 150, 20, 100, { isStatic: true, stroke: 'blue', strokeWidth: 1, angle: 15 });
-shapes.push(topLeftWall);
-world.addBody(topLeftWall.body);
-*/
- 
-/*
-const rightWall = new Rect(220, 90, 20, 100, { isStatic: true, stroke: 'blue', strokeWidth: 1, angle: 30 });
-shapes.push(rightWall);
-world.addBody(rightWall.body);
-*/
-
-/*
-const bottomWall = new Rect(100, 80, 100, 20, { isStatic: true, stroke: 'blue', strokeWidth: 1 });
-shapes.push(bottomWall)
-world.addBody(bottomWall.body);
-*/
 
 const fixedTimeStep = 1 / 60; // seconds
 const maxSubSteps = 10; // Max sub steps to catch up with the wall clock
 
 // Animation loop
-start((dt) => {
-  console.log(dt)
+start(
+  /**
+   * @param {number} dt - time in milliseconds since last execution
+   */
+  (dt) => {
     // Move bodies forward in time
     world.step(fixedTimeStep, dt / 1000, maxSubSteps);
 
@@ -87,20 +97,12 @@ start((dt) => {
 
 const addCircle = () => {
   const diameter = randomIntBetween(10, 30);
-  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, { mass: 5, stroke: 'black', strokeWidth: 1 });
+  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, world, { mass: 5, stroke: 'black', strokeWidth: 1 });
   drops.push(drop);
-  world.addBody(drop.body);
   setTimeout(addCircle, 1000);
 }
-addCircle();
+// addCircle();
 
-function draw() {
-  drops.forEach(d => {
-    d.draw(screen);
-  });
-  jar.draw(screen);
-}
 
-function randomIntBetween(min, max) {
-  return min + Math.floor(Math.random() * (max - min + 1));
-}
+
+pause();

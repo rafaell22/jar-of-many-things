@@ -1,5 +1,5 @@
 // @ts-check
-import { show, hide } from './domUtils.js';
+import { show, hide } from './utils/domUtils.js';
 import { setPageColors } from './pageColors.js';
 
 const colorSettings = {
@@ -10,9 +10,11 @@ const colorSettings = {
     background: document.getElementById('backgroundColor'),
 };
 
+const settingsDialog = document.getElementById('settings-dialog');
 const dialogOverlay = document.getElementById('dialog-overlay');
-dialogOverlay?.addEventListener('click', function closeRacetimeDialog() {
+dialogOverlay?.addEventListener('click', function closeSettignsDialog() {
     hide(dialogOverlay);
+    hide(settingsDialog);
 });
 
 export function initSettings() {
@@ -35,7 +37,7 @@ export function initSettings() {
 
 export function showSettings() {
     show(dialogOverlay);
-    show(timerSettings.dialog);
+    show(settingsDialog);
 }
 
 const DEFAULT_COLORS = {

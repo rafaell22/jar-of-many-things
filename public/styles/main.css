@@ -176,6 +176,7 @@ input[type="checkbox"] + label {
 #footer>div {
     float: right;
     margin-right: 10px;
+    color: var(--secondary-color);
 }
 
 #resize {
@@ -188,4 +189,8 @@ input[type="checkbox"] + label {
 
 #world {
   border: 1px solid black;
+}
+
+#world.edit {
+  border: 2px solid red;
 }

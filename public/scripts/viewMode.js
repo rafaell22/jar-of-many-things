@@ -1,6 +1,6 @@
 // @ts-check
 
-import { hide, show } from './domUtils.js';
+import { hide, show } from './utils/domUtils.js';
 
 /**
  * @param {boolean} isBareView
