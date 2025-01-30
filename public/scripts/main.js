@@ -8,6 +8,7 @@ import Screen from './classes/Screen.js';
 import Drop, {DROP_TYPE} from './classes/Drop.js';
 import Jar from './classes/Jar.js';
 import { randomIntBetween } from './utils/math.js';
+import Image from './classes/Image.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -37,6 +38,9 @@ const draw = () => {
   screen.drawGrid();
   drops.forEach(d => {
     d.draw(screen);
+  });
+  images.forEach(i => {
+    i.draw(screen);
   });
   jar.draw(screen);
 }
@@ -71,6 +75,7 @@ setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
 ////////////////
 
 const drops = [];
+const images = [];
 // const floor = new Plane(0, 100, { isStatic: true, stroke: 'brown', strokeWidth: 1 });
 // world.addBody(floor.body);
 // shapes.push(floor);
@@ -103,6 +108,9 @@ const addCircle = () => {
 }
 // addCircle();
 
+const jarBg = new Image(0, 0, 48, 48, '../assets/jar.jpg', {});
+jarBg.load(() => {
+  images.push(jarBg);
+});
 
-
-pause();
+// pause();

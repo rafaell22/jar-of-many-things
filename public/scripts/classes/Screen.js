@@ -98,4 +98,9 @@ export default class Screen {
       // this.fillText(i, 0, `${i}`);
     }
   }
+  
+  drawImage(image, x, y, w, h) {
+    const screenCoords = this.worldToScreen(x, y);
+    this.ctx.drawImage(image, screenCoords[0], screenCoords[1], w, h);
+  }
 }
