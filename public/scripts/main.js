@@ -108,7 +108,7 @@ const addCircle = () => {
 }
 // addCircle();
 
-const jarBg = new Image(0, 0, 48, 48, '../assets/jar.jpg', {});
+const jarBg = new Image(0, 0, 48, 48, '/jar/assets/jar.jpg', {});
 jarBg.load(() => {
   images.push(jarBg);
 });
