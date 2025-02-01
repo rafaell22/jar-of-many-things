@@ -4,11 +4,7 @@ import Body from './Body.js';
 import EditPoint from './EditPoint.js';
 
 export default class Jar {
-  constructor(x, y, w, h, coords, world, img) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
+  constructor(coords, world, img) {
     this.coords = coords;
     this.parts = [];
     this.editPoints = [];
@@ -26,7 +22,10 @@ export default class Jar {
       const ay = a[1];
       const bx = b[0];
       const by = b[1];
-      const alpha = Math.atan(Math.abs(ax - bx)/Math.abs(ay - by))
+      let alpha = Math.atan(Math.abs(ax - bx)/Math.abs(ay - by));
+      if(ay < by) {
+        alpha = -alpha;
+      }
       
       const h = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
       const cx = Math.abs(ax - bx) / 2 + (ax > bx ? bx : ax);

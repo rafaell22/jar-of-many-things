@@ -1,8 +1,9 @@
 const express = require('express');
 const helmet = require('helmet');
 const path = require('path')
-const axios = require('axios');
+const WebSocket = require('ws');
 
+let client;
 const app = express();
 
 app.use(helmet({
@@ -16,6 +17,13 @@ app.use(helmet({
 
 app.use('/jar', express.static(path.join(__dirname, 'public')));
 
+app.post('/jar/drop', (req, res) => {
+  if(client) {
+    client.send('{"event":"drop"}')
+  }
+
+  res.send('OK');
+})
 /*
 app.get('/races/details/:category/:raceSlug/data', async function getRaceDetails(req, res, next) {
   try {
@@ -76,5 +84,37 @@ app.use(function handleErrors(err, req, res, next) {
   res.send();
 });
 
-app.listen(8080);
+const server = app.listen(8080);
 console.log('Listening on port 8080...');
+
+const wss = new WebSocket.Server({
+  noServer: true,
+  path: "/websockets",
+});
+
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (websocket) => {
+    wss.emit('connection', websocket, request);
+  });
+});
+
+wss.on('connection', (websocketConnection, connectionRequest) => {
+  const [_path, params] = connectionRequest?.url?.split("?");
+  // const connectionParams = queryString.parse(params);
+
+  console.log('Websocket connected!')
+
+  websocketConnection.on('message', (message) => {
+    const parsedMessage = JSON.parse(message);
+    console.log(parsedMessage);
+  });
+
+  websocketConnection.on('error', (e) => { 
+    console.log(e);
+  });
+
+  websocketConnection.on('close', () => {
+    client = null;
+  });
+});
+

@@ -26,11 +26,13 @@ if(canvas) {
 const screen = new Screen(300, 600, '#00b140', ctx);
 const world = new p2.World({gravity: [0, -50]});
 
-const jar = new Jar(100, 80, 200, 200, [
-  [100, 100], 
-  [100, 50], 
-  [200, 50],
-  [200, 100]
+const jar = new Jar([
+  [100, 160], 
+  [90, 140], 
+  [90, 50], 
+  [210, 50],
+  [210, 140],
+  [200, 160],
 ], world);
 jar.parts.forEach((p) => world.addBody(p.body.body))
 
@@ -114,3 +116,36 @@ jarBg.load(() => {
 });
 
 // pause();
+//
+
+
+
+
+// Websockets logic
+(async function() {
+  console.log('connecting to ws server...')
+  const ws = await connectToServer();
+
+  ws.onmessage = (webSocketMessage) => {
+    console.log('New message!');
+    const messageBody = JSON.parse(webSocketMessage.data);
+
+    if(messageBody.event === 'drop') {
+      addCircle();
+    }
+  };
+})()
+
+function connectToServer() {
+  const ws = new WebSocket('ws://localhost:8080/websockets');
+  return new Promise((resolve, reject) => {
+    const timer = setInterval(() => {
+      console.log(ws.readyState)
+      if(ws.readyState === 1) {
+        console.log('ws connected!'); 
+        clearInterval(timer)
+        resolve(ws);
+      }
+    }, 100);
+  });
+}
