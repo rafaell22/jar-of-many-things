@@ -26,5 +26,6 @@ export default class Body {
       }
       this.x = this.body.interpolatedPosition[0];
       this.y = this.body.interpolatedPosition[1];
+      this.rotation = - this.body.interpolatedAngle;
     }
 }

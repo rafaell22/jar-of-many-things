@@ -3,7 +3,7 @@ const helmet = require('helmet');
 const path = require('path')
 const WebSocket = require('ws');
 
-let client;
+let wsClientRef;
 const app = express();
 
 app.use(helmet({
@@ -18,12 +18,13 @@ app.use(helmet({
 app.use('/jar', express.static(path.join(__dirname, 'public')));
 
 app.post('/jar/drop', (req, res) => {
-  if(client) {
-    client.send('{"event":"drop"}')
+  if(wsClientRef) {
+    wsClientRef.send('{"event":"drop"}')
   }
 
   res.send('OK');
-})
+});
+
 /*
 app.get('/races/details/:category/:raceSlug/data', async function getRaceDetails(req, res, next) {
   try {
@@ -98,23 +99,28 @@ server.on('upgrade', (request, socket, head) => {
   });
 });
 
-wss.on('connection', (websocketConnection, connectionRequest) => {
+wss.on('connection', (wsClient, connectionRequest) => {
   const [_path, params] = connectionRequest?.url?.split("?");
   // const connectionParams = queryString.parse(params);
 
   console.log('Websocket connected!')
 
-  websocketConnection.on('message', (message) => {
+  wsClientRef = wsClient;
+
+  wsClient.on('message', (message) => {
+    console.log('WS message')
     const parsedMessage = JSON.parse(message);
     console.log(parsedMessage);
   });
 
-  websocketConnection.on('error', (e) => { 
+  wsClient.on('error', (e) => { 
+    console.log('WS connection error');
     console.log(e);
   });
 
-  websocketConnection.on('close', () => {
-    client = null;
+  wsClient.on('close', () => {
+    console.log('WS connection closed');
+    wsClientRef = null;
   });
 });
 

@@ -1,7 +1,7 @@
 import {loadImage} from '../utils/loadData.js';
 
-export default class Shape{
-    constructor(x, y, w, h, src, options = {},) {
+export default class Image {
+    constructor(x, y, w, h, src, options = {}) {
         const { angle } = options;
         const rotation = angle * Math.PI / 180;
 
@@ -11,6 +11,7 @@ export default class Shape{
         this.h = h;
         this.rotation = rotation
         this.src = src;
+        this.loaded = false;
     }
 
     async load(cb) {
@@ -20,7 +21,10 @@ export default class Shape{
             throw errorLoadingImage;
         }
 
-        cb();
+        this.loaded = true;
+        if(cb) {
+            cb();
+        }
     }
 
     draw(screen) {

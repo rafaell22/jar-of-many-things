@@ -2,13 +2,29 @@ import {radToDeg} from '../utils/geometry.js';
 import Rect from './Rect.js';
 import Body from './Body.js';
 import EditPoint from './EditPoint.js';
+import Screen from './Screen.js';
+import Image from './Image.js';
 
 export default class Jar {
-  constructor(coords, world, img) {
+  /**
+   * @constructor
+   * @param {Array<number[]>} coords
+   * @param {p2.World} world
+   * @param {object} imgConfig
+   * @param {number} imgConfig.x
+   * @param {number} imgConfig.y
+   * @param {number} imgConfig.w
+   * @param {number} imgConfig.h
+   * @param {string} imgConfig.src
+   * @param {number} [imgConfig.angle]
+   */
+  constructor(coords, world, imgConfig = {}) {
     this.coords = coords;
     this.parts = [];
     this.editPoints = [];
     this.isEditing = false;
+    this.image = new Image(imgConfig.x, imgConfig.y, imgConfig.w, imgConfig.h, imgConfig.src, { angle: imgConfig.angle });
+    this.image.load();
 
     // for each pair of coords[i] coords[i + 1]
     //   use line between points as centerline of rectangle
@@ -57,10 +73,15 @@ export default class Jar {
     });
   }
 
+  /**
+   * @param {Screen} screen
+   */
   draw(screen) {
     this.parts.forEach(p => p.shape.draw(screen));
+    if(this.image.loaded) {
+      this.image.draw(screen);
+    }
 
-    console.log('isEditing: ', this.isEditing);
     if(this.isEditing) {
       this.editPoints.forEach(p => p.draw(screen));
     }

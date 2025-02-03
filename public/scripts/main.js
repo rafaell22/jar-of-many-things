@@ -8,7 +8,8 @@ import Screen from './classes/Screen.js';
 import Drop, {DROP_TYPE} from './classes/Drop.js';
 import Jar from './classes/Jar.js';
 import { randomIntBetween } from './utils/math.js';
-import Image from './classes/Image.js';
+import Ws from './classes/Ws.js';
+import {distanceBetweenPoints} from './utils/geometry.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -23,6 +24,45 @@ if(canvas) {
   throw new Error('Canvas not found!');
 }
 
+////////////////////////
+// EVENT LISTENERS TO UPDATE JAR
+////////////////////////
+canvas.onpointerdown = (event) => {
+  // check if click is on edit point
+  let pointBeingEdited;
+  const eventPoint = screen.worldToScreen([event.offsetX, event.offsetY]);
+  jar.editPoints.forEach((editPoint) => {
+    console.log(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]));
+    console.log(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]) <= editPoint._shape.radius);
+    if(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]) <= editPoint._shape.radius) {
+      pointBeingEdited = editPoint;
+    }
+  });
+
+  // if so, add event listeners
+  if(pointBeingEdited) {
+    console.log('pointBeingEdited: ', pointBeingEdited);
+    canvas.onpointermove = (event) => {
+      console.log(event)
+      pointBeingEdited._shape.x += event.movementX;
+      pointBeingEdited._shape.y -= event.movementY;
+    }
+
+    canvas.onpointerup = () => {
+      // save points location/update points
+      canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
+    }
+
+    canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = () => {
+      // discard changes
+      canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
+    }
+  }
+}
+////////////////////////
+// END EVENT LISTENERS TO UPDATE JAR
+////////////////////////
+
 const screen = new Screen(300, 600, '#00b140', ctx);
 const world = new p2.World({gravity: [0, -50]});
 
@@ -33,23 +73,25 @@ const jar = new Jar([
   [210, 50],
   [210, 140],
   [200, 160],
-], world);
-jar.parts.forEach((p) => world.addBody(p.body.body))
+], world, {
+  x: 150, 
+  y: 50, 
+  w: 120, 
+  h: 120, 
+  src: '/jar/assets/jar.png',
+});
 
 const draw = () => {
   screen.drawGrid();
   drops.forEach(d => {
     d.draw(screen);
   });
-  images.forEach(i => {
-    i.draw(screen);
-  });
   jar.draw(screen);
 }
 
 const onEdit = () => {
   canvas?.classList.add('edit');
-  pause();
+  // pause();
 
   jar.edit();
   draw();
@@ -77,11 +119,6 @@ setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
 ////////////////
 
 const drops = [];
-const images = [];
-// const floor = new Plane(0, 100, { isStatic: true, stroke: 'brown', strokeWidth: 1 });
-// world.addBody(floor.body);
-// shapes.push(floor);
-
 
 const fixedTimeStep = 1 / 60; // seconds
 const maxSubSteps = 10; // Max sub steps to catch up with the wall clock
@@ -103,49 +140,20 @@ start(
 });
 
 const addCircle = () => {
+  console.log('Add circle!');
   const diameter = randomIntBetween(10, 30);
-  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, world, { mass: 5, stroke: 'black', strokeWidth: 1 });
+  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, world, {x: 0, y: 0, w: diameter, h: diameter, src: '/jar/assets/button_orange.png' }, { mass: 5, stroke: 'black', strokeWidth: 1 });
   drops.push(drop);
-  setTimeout(addCircle, 1000);
+  // setTimeout(addCircle, 1000);
 }
 // addCircle();
 
-const jarBg = new Image(150, 50, 120, 120, '/jar/assets/jar.png', {});
-jarBg.load(() => {
-  images.push(jarBg);
+const ws = new Ws();
+ws.connect({
+  drop: {
+    event: 'drop',
+    cb: addCircle,
+  }
 });
 
-// pause();
-//
 
-
-
-
-// Websockets logic
-(async function() {
-  console.log('connecting to ws server...')
-  const ws = await connectToServer();
-
-  ws.onmessage = (webSocketMessage) => {
-    console.log('New message!');
-    const messageBody = JSON.parse(webSocketMessage.data);
-
-    if(messageBody.event === 'drop') {
-      addCircle();
-    }
-  };
-})()
-
-function connectToServer() {
-  const ws = new WebSocket('ws://localhost:8080/websockets');
-  return new Promise((resolve, reject) => {
-    const timer = setInterval(() => {
-      console.log(ws.readyState)
-      if(ws.readyState === 1) {
-        console.log('ws connected!'); 
-        clearInterval(timer)
-        resolve(ws);
-      }
-    }, 100);
-  });
-}
