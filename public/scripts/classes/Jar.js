@@ -25,11 +25,54 @@ export default class Jar {
     this.isEditing = false;
     this.image = new Image(imgConfig.x, imgConfig.y, imgConfig.w, imgConfig.h, imgConfig.src, { angle: imgConfig.angle });
     this.image.load();
+    this.calculateParts(world);
+   }
 
+  update() {
+    this.parts.forEach(p => {
+      p.body.update();
+      p.shape.x = p.body.x;
+      p.shape.y = p.body.y;
+    });
+  }
+
+  /**
+   * @param {Screen} screen
+   */
+  draw(screen) {
+    if(this.image.loaded) {
+      this.image.draw(screen);
+    }
+
+    if(this.isEditing) {
+      this.parts.forEach(p => p.shape.draw(screen));
+      this.editPoints.forEach(p => p.draw(screen));
+    }
+  }
+
+  edit() {
+    this.isEditing = true;
+  }
+
+  endEdit() {
+    this.isEditing = false;
+  }
+
+  calculateParts(world) {
     // for each pair of coords[i] coords[i + 1]
     //   use line between points as centerline of rectangle
     //   calculate center of rectangle (rotated)
     //   calculate top left corner of unrotated rectangle
+    let coords = this.coords;
+    if(this.editPoints.length > 0) {
+      coords = this.editPoints.map(ep => [ep.x, ep.y]);
+    }
+
+    this.parts.forEach(p => world.removeBody(p.body.body));
+
+    this.editPoints = [];
+    this.parts = [];
+
     const w1 = 5;
     for(let i = 0; i < coords.length - 1; i++) {
       const a = coords[i];
@@ -39,7 +82,10 @@ export default class Jar {
       const bx = b[0];
       const by = b[1];
       let alpha = Math.atan(Math.abs(ax - bx)/Math.abs(ay - by));
-      if(ay < by) {
+      if(
+        (ax > bx && ay < by) ||
+        (ax < bx && ay > by)
+      ) {
         alpha = -alpha;
       }
       
@@ -63,35 +109,5 @@ export default class Jar {
 
     const lastPoint = coords[coords.length - 1];
     this.editPoints.push(new EditPoint(lastPoint[0], lastPoint[1]));
-  }
-
-  update() {
-    this.parts.forEach(p => {
-      p.body.update();
-      p.shape.x = p.body.x;
-      p.shape.y = p.body.y;
-    });
-  }
-
-  /**
-   * @param {Screen} screen
-   */
-  draw(screen) {
-    this.parts.forEach(p => p.shape.draw(screen));
-    if(this.image.loaded) {
-      this.image.draw(screen);
-    }
-
-    if(this.isEditing) {
-      this.editPoints.forEach(p => p.draw(screen));
-    }
-  }
-
-  edit() {
-    this.isEditing = true;
-  }
-
-  endEdit() {
-    this.isEditing = false;
   }
 }

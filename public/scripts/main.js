@@ -32,8 +32,6 @@ canvas.onpointerdown = (event) => {
   let pointBeingEdited;
   const eventPoint = screen.worldToScreen([event.offsetX, event.offsetY]);
   jar.editPoints.forEach((editPoint) => {
-    console.log(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]));
-    console.log(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]) <= editPoint._shape.radius);
     if(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]) <= editPoint._shape.radius) {
       pointBeingEdited = editPoint;
     }
@@ -41,9 +39,9 @@ canvas.onpointerdown = (event) => {
 
   // if so, add event listeners
   if(pointBeingEdited) {
-    console.log('pointBeingEdited: ', pointBeingEdited);
     canvas.onpointermove = (event) => {
-      console.log(event)
+      pointBeingEdited.x += event.movementX;
+      pointBeingEdited.y -= event.movementY;
       pointBeingEdited._shape.x += event.movementX;
       pointBeingEdited._shape.y -= event.movementY;
     }
@@ -51,6 +49,7 @@ canvas.onpointerdown = (event) => {
     canvas.onpointerup = () => {
       // save points location/update points
       canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
+      jar.calculateParts(world);
     }
 
     canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = () => {
@@ -82,7 +81,7 @@ const jar = new Jar([
 });
 
 const draw = () => {
-  screen.drawGrid();
+  // screen.drawGrid();
   drops.forEach(d => {
     d.draw(screen);
   });

@@ -1,8 +1,8 @@
 import Body from './Body.js';
 import Circle from './Circle.js';
 
-const EDIT_POINT_RADIUS = 5;
-const EDIT_POINT_FILL_STYLE = 'white';
+const EDIT_POINT_RADIUS = 10;
+const EDIT_POINT_FILL_STYLE = 'rgba(255, 255, 255, 0.5)';
 const EDIT_POINT_STROKE_STYLE = 'red';
 const EDIT_POINT_STROKE_WIDTH = 2;
 
