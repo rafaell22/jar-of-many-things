@@ -9,7 +9,9 @@ import Drop, {DROP_TYPE} from './classes/Drop.js';
 import Jar from './classes/Jar.js';
 import { randomIntBetween } from './utils/math.js';
 import Ws from './classes/Ws.js';
-import {distanceBetweenPoints} from './utils/geometry.js';
+import Point from './classes/Point.js';
+import EditPoint from './classes/EditPoint.js';
+import {distanceBetweenPoints, isPointInCircle, isPointInRect} from './utils/geometry.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -30,12 +32,20 @@ if(canvas) {
 canvas.onpointerdown = (event) => {
   // check if click is on edit point
   let pointBeingEdited;
+  let rectBeingEditedIndex;
   const eventPoint = screen.worldToScreen([event.offsetX, event.offsetY]);
   jar.editPoints.forEach((editPoint) => {
-    if(distanceBetweenPoints(eventPoint, [editPoint._shape.x, editPoint._shape.y]) <= editPoint._shape.radius) {
+    if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
       pointBeingEdited = editPoint;
     }
   });
+
+  for(let i = 0; i < jar.parts.length; i++) {
+    console.log(isPointInRect(new Point(...eventPoint), jar.parts[i].shape));
+    if(isPointInRect(new Point(...eventPoint), jar.parts[i].shape)) {
+      rectBeingEditedIndex = i;
+    }
+  }
 
   // if so, add event listeners
   if(pointBeingEdited) {
@@ -56,8 +66,15 @@ canvas.onpointerdown = (event) => {
       // discard changes
       canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
     }
+  } else if(rectBeingEditedIndex) {
+    console.log(rectBeingEditedIndex);
+    jar.editPoints.splice(rectBeingEditedIndex + 1, 0, new EditPoint(eventPoint[0], eventPoint[1]));
+    console.log(jar.coords);
+    jar.calculateParts(world)
   }
 }
+
+const chromaColorElement = document.getElementById('chroma');
 ////////////////////////
 // END EVENT LISTENERS TO UPDATE JAR
 ////////////////////////
@@ -101,16 +118,16 @@ const onEditEnd = () => {
   jar.endEdit();
 }
 
-initSettings();
+initSettings({
+  onChange: (colors) => {
+    screen.bg = colors.chromaColor;
+  }
+});
 initFooter({ onEdit, onEditEnd });
 initResizeEvent();
 
 updateColorSettings({
-    primary: urlSearchParams.get('primary'),
-    secondary: urlSearchParams.get('secondary'),
-    highlights: urlSearchParams.get('highlights'),
-    shadows: urlSearchParams.get('shadows'),
-    background: urlSearchParams.get('background'),
+    chromaColor: urlSearchParams.get('chroma'),
 });
 
 setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
@@ -138,10 +155,14 @@ start(
     draw();
 });
 
+
+const colors = ['blue', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow'];
 const addCircle = () => {
-  console.log('Add circle!');
   const diameter = randomIntBetween(10, 30);
-  const drop = new Drop(randomIntBetween(110, 190), randomIntBetween(250, 300), diameter, diameter, DROP_TYPE.CIRCLE, world, {x: 0, y: 0, w: diameter, h: diameter, src: '/jar/assets/button_orange.png' }, { mass: 5, stroke: 'black', strokeWidth: 1 });
+  const x = randomIntBetween(110, 190);
+  const y = randomIntBetween(250, 300);
+  const color = colors[randomIntBetween(0, colors.length - 1)];
+  const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, world, {x: 0, y: 0, w: diameter, h: diameter, src: `/jar/assets/button_${color}.png` }, { mass: 5, stroke: 'black', strokeWidth: 1 });
   drops.push(drop);
   // setTimeout(addCircle, 1000);
 }

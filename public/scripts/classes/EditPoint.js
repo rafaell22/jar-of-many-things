@@ -21,4 +21,8 @@ export default class EditPoint {
   draw(screen) {
     this._shape.draw(screen);
   }
+
+  get shape() {
+    return this._shape;
+  }
 }

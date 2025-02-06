@@ -9,6 +9,8 @@ const footer = {
     edit: document.getElementById('edit'),
 }
 
+const footerElement = document.getElementById('footer');
+
 export function initFooter({ onEdit, onEditEnd } = { onEdit: NOOP, onEditEnd: NOOP }) {
     footer.settings?.addEventListener('click', showSettings);
 
@@ -25,7 +27,7 @@ export function initFooter({ onEdit, onEditEnd } = { onEdit: NOOP, onEditEnd: NO
         urlParams.append('shadows', pageColors.shadows);
         urlParams.append('background', pageColors.background);
 
-        const url = new URL(`http://localhost:8080/timer/?${urlParams.toString()}`);
+        const url = new URL(`http://localhost:8080/jar/?${urlParams.toString()}`);
 
         const width = 550;
         const height = 150;
@@ -50,6 +52,9 @@ export function initFooter({ onEdit, onEditEnd } = { onEdit: NOOP, onEditEnd: NO
     if(footer.edit) {
         footer.edit.onclick = onEditEvent;
     }
+
+    document.addEventListener('mouseover', () => footerElement?.classList.remove('hidden'));
+    document.addEventListener('mouseleave', () => footerElement?.classList.add('hidden'));
 }
 
 
