@@ -21,9 +21,7 @@ export default class Ws {
             this.connected = true;
 
             this.ws.onmessage = (webSocketMessage) => {
-              console.log('New message!');
               const messageBody = JSON.parse(webSocketMessage.data);
-              console.log('messageBody: ', messageBody)
 
               const event = messageBody.event;
               if(event && this.events[event]) {

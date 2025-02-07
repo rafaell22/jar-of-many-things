@@ -3,127 +3,20 @@ import { initSettings, updateColorSettings } from './settings.js';
 import { initFooter } from './footer.js'
 import { initResizeEvent } from './resize.js';
 import { setViewMode } from './viewMode.js';
-import { start, pause } from './mainloop.js';
-import Screen from './classes/Screen.js';
-import Drop, {DROP_TYPE} from './classes/Drop.js';
-import Jar from './classes/Jar.js';
-import { randomIntBetween } from './utils/math.js';
-import Ws from './classes/Ws.js';
-import Point from './classes/Point.js';
-import EditPoint from './classes/EditPoint.js';
-import {distanceBetweenPoints, isPointInCircle, isPointInRect} from './utils/geometry.js';
-
-const p2 = /** @type {object} */ (globalThis).p2;
+import Main from './classes/Main.js';
 
 const urlSearchParamsAsText = window.location.search;
 const urlSearchParams = new URLSearchParams(urlSearchParamsAsText);
 
-const canvas = /** @type {HTMLCanvasElement|null} */ (document.getElementById('world'));
-let ctx;
-if(canvas) {
-  ctx = canvas.getContext('2d');
-} else {
-  throw new Error('Canvas not found!');
-}
+const main = new Main();
 
-////////////////////////
-// EVENT LISTENERS TO UPDATE JAR
-////////////////////////
-canvas.onpointerdown = (event) => {
-  // check if click is on edit point
-  let pointBeingEdited;
-  let rectBeingEditedIndex;
-  const eventPoint = screen.worldToScreen([event.offsetX, event.offsetY]);
-  jar.editPoints.forEach((editPoint) => {
-    if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
-      pointBeingEdited = editPoint;
-    }
-  });
-
-  for(let i = 0; i < jar.parts.length; i++) {
-    console.log(isPointInRect(new Point(...eventPoint), jar.parts[i].shape));
-    if(isPointInRect(new Point(...eventPoint), jar.parts[i].shape)) {
-      rectBeingEditedIndex = i;
-    }
-  }
-
-  // if so, add event listeners
-  if(pointBeingEdited) {
-    canvas.onpointermove = (event) => {
-      pointBeingEdited.x += event.movementX;
-      pointBeingEdited.y -= event.movementY;
-      pointBeingEdited._shape.x += event.movementX;
-      pointBeingEdited._shape.y -= event.movementY;
-    }
-
-    canvas.onpointerup = () => {
-      // save points location/update points
-      canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
-      jar.calculateParts(world);
-    }
-
-    canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = () => {
-      // discard changes
-      canvas.onpointermove = canvas.onpointerup = canvas.onpointerout = canvas.onpointerleave = canvas.onpointercancel = null;
-    }
-  } else if(rectBeingEditedIndex) {
-    console.log(rectBeingEditedIndex);
-    jar.editPoints.splice(rectBeingEditedIndex + 1, 0, new EditPoint(eventPoint[0], eventPoint[1]));
-    console.log(jar.coords);
-    jar.calculateParts(world)
-  }
-}
 
 const chromaColorElement = document.getElementById('chroma');
-////////////////////////
-// END EVENT LISTENERS TO UPDATE JAR
-////////////////////////
-
-const screen = new Screen(300, 600, '#00b140', ctx);
-const world = new p2.World({gravity: [0, -50]});
-
-const jar = new Jar([
-  [100, 160], 
-  [90, 140], 
-  [90, 50], 
-  [210, 50],
-  [210, 140],
-  [200, 160],
-], world, {
-  x: 150, 
-  y: 50, 
-  w: 120, 
-  h: 120, 
-  src: '/jar/assets/jar.png',
-});
-
-const draw = () => {
-  // screen.drawGrid();
-  drops.forEach(d => {
-    d.draw(screen);
-  });
-  jar.draw(screen);
-}
-
-const onEdit = () => {
-  canvas?.classList.add('edit');
-  // pause();
-
-  jar.edit();
-  draw();
-}
-const onEditEnd = () => {
-  canvas?.classList.remove('edit');
-  
-  jar.endEdit();
-}
 
 initSettings({
-  onChange: (colors) => {
-    screen.bg = colors.chromaColor;
-  }
+  onChange: (colors) => main.updateScreenBackground.bind(main, colors.chromaColor)
 });
-initFooter({ onEdit, onEditEnd });
+initFooter({ onEdit: main.onEdit.bind(main), onCancel: main.onCancel.bind(main) });
 initResizeEvent();
 
 updateColorSettings({
@@ -131,49 +24,4 @@ updateColorSettings({
 });
 
 setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
-
-////////////////
-
-const drops = [];
-
-const fixedTimeStep = 1 / 60; // seconds
-const maxSubSteps = 10; // Max sub steps to catch up with the wall clock
-
-// Animation loop
-start(
-  /**
-   * @param {number} dt - time in milliseconds since last execution
-   */
-  (dt) => {
-    // Move bodies forward in time
-    world.step(fixedTimeStep, dt / 1000, maxSubSteps);
-
-    drops.forEach((d) => {
-      d.update();
-    });
-    screen.clear();
-    draw();
-});
-
-
-const colors = ['blue', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow'];
-const addCircle = () => {
-  const diameter = randomIntBetween(10, 30);
-  const x = randomIntBetween(110, 190);
-  const y = randomIntBetween(250, 300);
-  const color = colors[randomIntBetween(0, colors.length - 1)];
-  const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, world, {x: 0, y: 0, w: diameter, h: diameter, src: `/jar/assets/button_${color}.png` }, { mass: 5, stroke: 'black', strokeWidth: 1 });
-  drops.push(drop);
-  // setTimeout(addCircle, 1000);
-}
-// addCircle();
-
-const ws = new Ws();
-ws.connect({
-  drop: {
-    event: 'drop',
-    cb: addCircle,
-  }
-});
-
 

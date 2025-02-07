@@ -11,6 +11,10 @@ export const DROP_TYPE = {
   CIRCLE: 'CIRCLE',
 }
 
+const DEFAULT_MASS = 5;
+const DEFAULT_STROKE = 'black';
+const DEFAULT_STROKE_WIDTH = 1;
+
 export default class Drop {
   /**
    * @constructor

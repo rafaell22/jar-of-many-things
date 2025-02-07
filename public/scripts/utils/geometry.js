@@ -36,3 +36,10 @@ export const isPointInRect = (p, r) => p.x > (r.x - r.w/2) &&
     p.x < (r.x + r.w/2) &&
     p.y > r.y &&
     p.y < r.y + r.h;
+
+/**
+ * @param {Point} p - point being rotated
+ * @param {Point} c - point/center to rotate aroung
+ * @param {number} r - rotation (counter-clockwise) in radians
+ */
+export const rotateAround = (p, c, r) => new Point(Math.cos(r)*(p.x - c.x) - Math.sin(r)*(p.y - c.y) + c.x, Math.sin(r)*(p.x - c.x) + Math.cos(r)*(p.y - c.y) + c.y);
