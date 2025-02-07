@@ -1,16 +1,18 @@
 // @ts-check
 /**
- * @param {Element|HTMLElement|null|undefined} el
+ * @param {Element|HTMLElement|string|null|undefined} el
  */
 export function hide(el) {
     if(!el) { return }
-    el.classList.add('hidden');
+    if(typeof el === 'string') { el = document.querySelector(el); }
+    el?.classList.add('hidden');
 }
 
 /**
- * @param {Element|HTMLElement|null|undefined} el
+ * @param {Element|HTMLElement|string|null|undefined} el
  */
 export function show(el) {
     if(!el) { return }
-    el.classList.remove('hidden');
+    if(typeof el === 'string') { el = document.querySelector(el); }
+    el?.classList.remove('hidden');
 }

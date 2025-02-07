@@ -1,7 +1,7 @@
 // @ts-check
 import { showSettings } from './settings.js';
-import { getPageColors } from './pageColors.js';
 import NOOP from './utils/NOOP.js';
+import { show, hide } from './utils/domUtils.js';
 
 const footer = {
     settings: document.getElementById('settings'),
@@ -13,7 +13,7 @@ const footer = {
 
 const footerElement = document.getElementById('footer');
 
-export function initFooter({ onEdit, onCancel } = { onEdit: NOOP, onCancel: NOOP }) {
+export function initFooter({ onEdit, onCancel, onSave } = { onEdit: NOOP, onCancel: NOOP, onSave: NOOP }) {
     footer.settings?.addEventListener('click', showSettings);
 
     footer.openWindow?.addEventListener('click', function openInNewWindow() {
@@ -32,29 +32,43 @@ export function initFooter({ onEdit, onCancel } = { onEdit: NOOP, onCancel: NOOP
     });
 
     const onEditEvent = () => {
-        footer.save?.classList.remove('hidden');
-        footer.cancel?.classList.remove('hidden');
-        footer.edit?.classList.add('hidden');
+        show(footer.save);
+        show(footer.cancel);
+        hide(footer.edit);
         onEdit();
         if(footer.cancel) {
             footer.cancel.onclick = onCancelEvent;
         }
+        if(footer.save) {
+            footer.save.onclick = onSaveEvent;
+        }
     };
     const onCancelEvent = () => {
-        footer.save?.classList.add('hidden');
-        footer.cancel?.classList.add('hidden');
-        footer.edit?.classList.remove('hidden');
+        hide(footer.save);
+        hide(footer.cancel);
+        show(footer.edit);
         onCancel();
         if(footer.edit) {
             footer.edit.onclick = onEditEvent;
         }
     };
+
+    const onSaveEvent = () => {
+        hide(footer.save);
+        hide(footer.cancel);
+        show(footer.edit);
+        onSave();
+        if(footer.edit) {
+            footer.edit.onclick = onEditEvent;
+        }
+    }
+
     if(footer.edit) {
         footer.edit.onclick = onEditEvent;
     }
 
-    document.addEventListener('mouseover', () => footerElement?.classList.remove('hidden'));
-    document.addEventListener('mouseleave', () => footerElement?.classList.add('hidden'));
+    document.addEventListener('mouseover', () => show(footerElement));
+    document.addEventListener('mouseleave', () => hide(footerElement));
 }
 
 
