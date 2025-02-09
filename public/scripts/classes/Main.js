@@ -14,7 +14,7 @@ import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
-const DROP_COLORS = ['blue', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow'];
+const DROP_COLORS = ['blue', 'cyan', 'pink', 'orange', 'purple', 'red', 'yellow'];
 
 export default class Main {
   constructor() {
@@ -73,9 +73,9 @@ export default class Main {
   }
 
   addDrop() {
-    const diameter = randomIntBetween(10, 30);
-    const x = randomIntBetween(110, 190);
-    const y = randomIntBetween(250, 300);
+    const diameter = randomIntBetween(15, 25);
+    const x = randomIntBetween(80, 220);
+    const y = randomIntBetween(350, 450);
     const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
     const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `/jar/assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
@@ -159,6 +159,10 @@ export default class Main {
     this.canvas?.classList.remove('edit');
     
     this.currentJar.endEdit();
+  }
+
+  onSave() {
+    console.log(this.currentJar.editPoints);
   }
 
   updateScreenBackground(color) {
