@@ -5,13 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
          </style>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rafaell22/Console@1.2.0/console.css">
+         <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rafaell22/Console@1.2.0/console.css">-->
         <link rel="icon" href="./assets/jar_icon.png">
         <link rel="stylesheet" href="./styles/main.css">
     </head>
     <body>
       <!--this library helps to debug when developping using a mobile device-->
-      <script src="https://cdn.jsdelivr.net/gh/rafaell22/Console@1.2.0/console.js"></script>
+      <!--<script src="https://cdn.jsdelivr.net/gh/rafaell22/Console@1.2.0/console.js"></script>-->
       <div id="resize" class="bare-view hidden">
         <img src="./assets/resize.svg" />
       </div>
@@ -26,6 +26,19 @@
         <div class="row">
           <input type="color" id="chromaColor" value="#00b140" />
           <label>Chroma</label>
+        </div>
+        <p>Jar</p>
+        <div class="row">
+          <input type="file" id="jar-bg-src" accept="image/png, image/jpeg" />
+          <label>Jar Image</label>
+        </div>
+        <div class="row">
+          <input type="number" id="jar-bg-w" />
+          <label>Jar Image Width</label>
+        </div>
+        <div class="row">
+          <input type="number" id="jar-bg-h" />
+          <label>Jar Image Height</label>
         </div>
       </div>
 

@@ -25,6 +25,14 @@ app.post('/jar/drop', (req, res) => {
   res.send('OK');
 });
 
+app.get('/jar/drop', (req, res) => {
+  if(wsClientRef) {
+    wsClientRef.send('{"event":"drop"}')
+  }
+
+  res.send('OK');
+});
+
 /*
 app.get('/races/details/:category/:raceSlug/data', async function getRaceDetails(req, res, next) {
   try {
