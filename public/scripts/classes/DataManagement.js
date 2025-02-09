@@ -36,7 +36,8 @@ const DEFAULT_CONFIG = {
 
 export default class DataManagement {
   constructor() {
-    this.config = this.load('config');
+    // this.config = this.load('config');
+    this.config = null;
     if(!this.config) {
       this.config = DEFAULT_CONFIG;
       this.save('config', this.config);
