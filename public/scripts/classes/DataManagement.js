@@ -40,7 +40,7 @@ export default class DataManagement {
     this.config = null;
     if(!this.config) {
       this.config = DEFAULT_CONFIG;
-      this.save('config', this.config);
+      this.save('config', this.config, true);
     }
   }
 
