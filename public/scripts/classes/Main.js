@@ -11,6 +11,7 @@ import EditPoint from './EditPoint.js';
 import { start } from '../mainloop.js';
 import { randomIntBetween } from '../utils/math.js'
 import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
+import {initResizeEvent} from '../resize.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -30,7 +31,7 @@ export default class Main {
       throw new Error('Canvas not found!');
     }
 
-    this.screen = new Screen(300, 600, '#00b140', this.ctx);
+    this.screen = new Screen(this.canvas.width, this.canvas.height, '#00b140', this.ctx);
     this.world = new p2.World({gravity: [0, -50]});
 
     this.currentJar = null;
@@ -46,6 +47,7 @@ export default class Main {
 
     this.initEditEventListeners();
     this.initWebsockets();
+    initResizeEvent(this.canvas);
   }
 
   /**

@@ -9,3 +9,4 @@
 - Edit existing Drop
 - Have multiple Jars
 - Save data/configs
+- Add a counter
