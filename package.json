@@ -29,5 +29,18 @@
     "@electron-forge/plugin-fuses": "^7.6.1",
     "@electron/fuses": "^1.8.0",
     "electron": "^34.2.0"
+  },
+  "config": {
+    "forge": {
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "win32"
+          ]
+        }
+      ],
+      "publishers": []
+    }
   }
 }
