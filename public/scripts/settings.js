@@ -1,9 +1,11 @@
 // @ts-check
 import { show, hide } from './utils/domUtils.js';
 import { setPageColors } from './pageColors.js';
+import pubSub from './classes/PubSub.js';
 
 const colorSettings = {
     chromaColor: document.getElementById('chromaColor'), 
+    uiColor: document.getElementById('uiColor'), 
 };
 
 const settingsDialog = document.getElementById('settings-dialog');
@@ -13,14 +15,16 @@ dialogOverlay?.addEventListener('click', function closeSettignsDialog() {
     hide(settingsDialog);
 });
 
-export function initSettings({
-    onChange,
-}) {
+export function initSettings() {
     if(colorSettings.chromaColor) {
         colorSettings.chromaColor.onchange = () => {
-            onChange({ 
-                chromaColor: colorSettings.chromaColor?.['value'],
-            });
+            pubSub.publish('change-chroma-color', colorSettings.chromaColor?.['value']);
+        };
+    }
+
+    if(colorSettings.uiColor) {
+        colorSettings.uiColor.onchange = () => {
+            pubSub.publish('change-ui-color', colorSettings.uiColor?.['value']);
         };
     }
 }
@@ -32,6 +36,7 @@ export function showSettings() {
 
 const DEFAULT_COLORS = {
     chromaColor: '#00b140',
+    uiColor: '#d4ce46',
 };
 
 /**
@@ -39,9 +44,14 @@ const DEFAULT_COLORS = {
  */
 export function updateColorSettings(colors) {
     const chromaColor = colors.chromaColor ?? DEFAULT_COLORS.chromaColor;
+    const uiColor = colors.uiColor ?? DEFAULT_COLORS.uiColor;
 
     if(colorSettings.chromaColor) {
         colorSettings.chromaColor['value'] = chromaColor;
+    }
+
+    if(colorSettings.uiColor) {
+        colorSettings.uiColor['value'] = uiColor;
     }
 }
 

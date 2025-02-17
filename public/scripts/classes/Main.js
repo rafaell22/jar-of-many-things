@@ -4,14 +4,17 @@ import Jar from './Jar.js';
 import Drop from './Drop.js';
 import { DROP_TYPE } from './Drop.js';
 import Point from './Point.js';
+import Rect from './Rect.js';
+import EditPoint from './EditPoint.js';
+
 import Ws from './Ws.js';
 import Screen from './Screen.js';
-import EditPoint from './EditPoint.js';
+import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
 import { randomIntBetween } from '../utils/math.js'
 import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
-import {initResizeEvent} from '../resize.js';
+import { initResizeEvent } from '../resize.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -31,7 +34,8 @@ export default class Main {
       throw new Error('Canvas not found!');
     }
 
-    this.screen = new Screen(this.canvas.width, this.canvas.height, '#00b140', this.ctx);
+    // this.screen = new Screen(this.canvas.width, this.canvas.height, '#00b140', this.ctx);
+    this.screen = new Screen(window.innerWidth, window.innerHeight, '#00b140', this.ctx);
     this.world = new p2.World({gravity: [0, -50]});
 
     this.currentJar = null;
@@ -39,7 +43,9 @@ export default class Main {
       this.dataManagement.config.currentJar = this.dataManagement.config.jars[0].name;
     }
     const jarConfig = this.dataManagement.config.jars.find((j) => j.name === this.dataManagement.config.currentJar);
-    this.currentJar = new Jar(jarConfig.coords, this.world, jarConfig.image);
+    this.currentJar = new Jar(jarConfig?.coords ?? [], this.world, jarConfig?.image);
+
+    this.dropArea = new Rect(500, 500, 145, 100, { strokeWidth: 1, strokeStyle: 'red' });
 
     this.FIXED_TIME_STEP = 1 / 60; // seconds
     this.MAX_SUB_STEPS = 10; // Max sub steps to catch up with the wall clock
@@ -67,6 +73,7 @@ export default class Main {
   draw() {
     if(this.isEditing) {
       this.screen.drawGrid();
+      this.dropArea.draw(this.screen);
     }
     this.drops.forEach(d => {
       d.draw(this.screen);
@@ -76,10 +83,10 @@ export default class Main {
 
   addDrop() {
     const diameter = randomIntBetween(15, 25);
-    const x = randomIntBetween(80, 220);
-    const y = randomIntBetween(350, 450);
+    const x = randomIntBetween(this.dropArea.x - this.dropArea.w / 2, this.dropArea.x + this.dropArea.w / 2);
+    const y = randomIntBetween(this.dropArea.y, this.dropArea.y + this.dropArea.h);
     const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
-    const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `/jar/assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
+    const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
   }
 
@@ -148,12 +155,19 @@ export default class Main {
 
   initEditEventListeners() {
     this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
+    pubSub.subscribe('on-edit-jar', this.onEdit.bind(this));
+    pubSub.subscribe('on-cancel-edit-jar', this.onCancel.bind(this));
+    pubSub.subscribe('on-save-edit-jar', this.onSave.bind(this));
+    pubSub.subscribe('on-reset-jar', this.onReset.bind(this));
+    pubSub.subscribe('on-drop', this.onDrop.bind(this));
+    pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
   }
 
   onEdit() {
     this.canvas?.classList.add('edit');
 
     this.currentJar.edit();
+    this.isEditing = true;
     this.draw();
   }
 
@@ -165,6 +179,17 @@ export default class Main {
 
   onSave() {
     console.log(this.currentJar.editPoints);
+  }
+
+  onReset() {
+    this.drops.forEach((d) => {
+      this.world.removeBody(d.body);
+    });
+    this.drops = [];
+  }
+
+  onDrop() {
+    this.addDrop();
   }
 
   updateScreenBackground(color) {

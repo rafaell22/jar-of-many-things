@@ -83,14 +83,14 @@ export default class Screen {
   }
 
   drawGrid() {
-    for(let j = 0; j < this.h; j += 10) {
+    for(let j = 0; j < this.h; j += 100) {
       const screenCoords1 = this.worldToScreen([0, j]);
       const screenCoords2 = this.worldToScreen([this.w, j]);
       this.strokeLine(screenCoords1[0], screenCoords1[1], screenCoords2[0], screenCoords2[1], 'black', 1);
       // this.fillText(0, j, `${j}`);
     }
 
-    for(let i = 0; i < this.w; i += 10) {
+    for(let i = 0; i < this.w; i += 100) {
       const screenCoords1 = this.worldToScreen([i, 0]);
       const screenCoords2 = this.worldToScreen([i, this.h]);
       this.strokeLine(screenCoords1[0], screenCoords1[1], screenCoords2[0], screenCoords2[1], 'black', 1);

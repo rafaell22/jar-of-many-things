@@ -1,53 +1,39 @@
 // @ts-check
 import { showSettings } from './settings.js';
-import NOOP from './utils/NOOP.js';
 import { show, hide } from './utils/domUtils.js';
+import pubSub from './classes/PubSub.js';
 
 const footer = {
     settings: document.getElementById('settings'),
-    openWindow: document.getElementById('open-window'),
     edit: document.getElementById('edit'),
     save: document.getElementById('save'),
-    cancel: document.getElementById('cancel')
+    cancel: document.getElementById('cancel'),
+    reset: document.getElementById('reset'),
+    drop: document.getElementById('drop'),
 }
 
 const footerElement = document.getElementById('footer');
 
-export function initFooter({ onEdit, onCancel, onSave } = { onEdit: NOOP, onCancel: NOOP, onSave: NOOP }) {
+export function initFooter() {
     footer.settings?.addEventListener('click', showSettings);
 
-    footer.openWindow?.addEventListener('click', function openInNewWindow() {
-        // get colors
-        const urlParams = new URLSearchParams();
-        urlParams.append('bare', 'true');
-
-        const url = new URL(`http://localhost:8080/jar/?${urlParams.toString()}`);
-
-        const width = 550;
-        const height = 150;
-        window.open(
-            url.toString(),
-            'Jar of Things',
-            `toolbar=0,location=0,locationbar=0,status=0,menubar=0,scrollbars=0,resizable=0,width=${width},height=${height}`);
-    });
-
     const onEditEvent = () => {
-        show(footer.save);
+        //show(footer.save);
         show(footer.cancel);
         hide(footer.edit);
-        onEdit();
+        pubSub.publish('on-edit-jar');
         if(footer.cancel) {
             footer.cancel.onclick = onCancelEvent;
         }
         if(footer.save) {
-            footer.save.onclick = onSaveEvent;
+            //footer.save.onclick = onSaveEvent;
         }
     };
     const onCancelEvent = () => {
-        hide(footer.save);
+        //hide(footer.save);
         hide(footer.cancel);
         show(footer.edit);
-        onCancel();
+        pubSub.publish('on-cancel-edit-jar');
         if(footer.edit) {
             footer.edit.onclick = onEditEvent;
         }
@@ -57,14 +43,30 @@ export function initFooter({ onEdit, onCancel, onSave } = { onEdit: NOOP, onCanc
         hide(footer.save);
         hide(footer.cancel);
         show(footer.edit);
-        onSave();
+        pubSub.publish('on-save-edit-jar');
         if(footer.edit) {
             footer.edit.onclick = onEditEvent;
         }
     }
 
+    const onResetEvent = () => {
+        pubSub.publish('on-reset-jar');
+    }
+
+    const onDropEvent = () => {
+        pubSub.publish('on-drop');
+    }
+
     if(footer.edit) {
         footer.edit.onclick = onEditEvent;
+    }
+
+    if(footer.reset) {
+        footer.reset.onclick = onResetEvent;
+    }
+
+    if(footer.drop) {
+        footer.drop.onclick = onDropEvent;
     }
 
     document.addEventListener('mouseover', () => show(footerElement));

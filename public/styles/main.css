@@ -166,17 +166,19 @@ input[type="checkbox"] + label {
 
 #footer {
     position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 48px;
-    background-color: var(--primary-color);
-    padding: 5px;
+    right: 0;
+    top: 0;
+    width: 48px;
+    height: 100%;
+    padding: 10px;
 }
 
 #footer>div {
     float: right;
-    margin-right: 10px;
+    margin-bottom: 10px;
     color: var(--secondary-color);
+    width: 32px;
+    height: 32px;
 }
 
 #footer svg {

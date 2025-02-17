@@ -1,7 +1,6 @@
 // @ts-check
 import { initSettings, updateColorSettings } from './settings.js';
-import { initFooter } from './footer.js'
-import { initResizeEvent } from './resize.js';
+import { initFooter } from './footer.js';
 import { setViewMode } from './viewMode.js';
 import Main from './classes/Main.js';
 
@@ -10,16 +9,13 @@ const urlSearchParams = new URLSearchParams(urlSearchParamsAsText);
 
 const main = new Main();
 
-const chromaColorElement = document.getElementById('chroma');
+initSettings();
 
-initSettings({
-  onChange: (colors) => main.updateScreenBackground.bind(main, colors.chromaColor)
-});
-initFooter({ onEdit: main.onEdit.bind(main), onCancel: main.onCancel.bind(main), onSave: main.onSave.bind(main), });
+initFooter();
 
 updateColorSettings({
-    chromaColor: urlSearchParams.get('chroma'),
+  chromaColor: urlSearchParams.get('chroma'),
+  uiColor: urlSearchParams.get('ui'),
 });
 
 setViewMode(urlSearchParams.get('bare') === 'true' ? true : false);
-
