@@ -1,3 +1,5 @@
+import Image from './Image.js';
+
 export default class Screen {
   constructor(w, h, bg, ctx) {
     this.w = w;
@@ -67,6 +69,14 @@ export default class Screen {
     this.ctx.setTransform(...args);
   }
 
+  /**
+    * @param {number} x1
+    * @param {number} y1
+    * @param {number} x2
+    * @param {number} y2
+    * @param {string} strokeStyle
+    * @param {number} strokeWidth
+    */
   strokeLine(x1, y1, x2, y2, strokeStyle, strokeWidth) {
     this.ctx.beginPath();
     this.ctx.moveTo(x1, y1);
@@ -76,6 +86,54 @@ export default class Screen {
     this.ctx.stroke()
   }
 
+  /**
+    * @param {Point[]} coords
+    * @param {string} strokeStyle
+    * @param {number} strokeWidth
+    */ 
+  strokePolygon(coords, strokeStyle, strokeWidth) {
+    this.ctx.beginPath();
+    for(let i = 0; i < coords.length; i++) {
+      const screenCoords = this.worldToScreen([coords[i].x, coords[i].y]);
+      if(i === 0) {
+        this.ctx.moveTo(screenCoords[0], screenCoords[1]);
+        continue;
+      }
+
+      this.ctx.lineTo(screenCoords[0], screenCoords[1]);
+    }
+    ctx.lineTo(screenCoords[0], screenCoords[1]);
+
+    this.ctx.strokeStyle = strokeStyle;
+    this.ctx.lineWidth = strokeWidth;
+    this.ctx.stroke();
+  }
+
+  /**
+    * @param {Point[]} coords
+    * @param {string} fillStyle
+    */ 
+  fillPolygon(coords, fillStyle) {
+    this.ctx.beginPath();
+    for(let i = 0; i < coords.length; i++) {
+      const screenCoords = this.worldToScreen([coords[i].x, coords[i].y]);
+      if(i === 0) {
+        this.ctx.moveTo(screenCoords[0], screenCoords[1]);
+        continue;
+      }
+
+      this.ctx.lineTo(screenCoords[0], screenCoords[1]);
+    }
+
+    this.ctx.fillStyle = fillStyle;
+    this.ctx.fill();
+  }
+
+  /**
+    * @param {number} x
+    * @param {number} y
+    * @param {string} content
+    */
   fillText(x, y, content) {
     const screenCoords = this.worldToScreen(x, y);
     this.ctx.fillStyle = 'black';
@@ -98,6 +156,13 @@ export default class Screen {
     }
   }
   
+  /**
+    * @param {Image} image
+    * @param {number} x
+    * @param {number} y
+    * @param {number} w
+    * @param {number} h
+    */
   drawImage(image, x, y, w, h) {
     const screenCoords = this.worldToScreen([ x, y ]);
     this.ctx.drawImage(image, screenCoords[0] - w / 2, screenCoords[1] - h, w, h);

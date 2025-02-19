@@ -13,8 +13,9 @@ import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
 import { randomIntBetween } from '../utils/math.js'
-import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
+import { isPointInCircle, isPointInQuadrilateral, isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
+import DropArea from './DropArea.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -45,7 +46,7 @@ export default class Main {
     const jarConfig = this.dataManagement.config.jars.find((j) => j.name === this.dataManagement.config.currentJar);
     this.currentJar = new Jar(jarConfig?.coords ?? [], this.world, jarConfig?.image);
 
-    this.dropArea = new Rect(500, 500, 145, 100, { strokeWidth: 1, strokeStyle: 'red' });
+    this.dropArea = new DropArea([new Point(427, 500), new Point(573, 500), new Point(573, 600), new Point(427, 600)])
 
     this.FIXED_TIME_STEP = 1 / 60; // seconds
     this.MAX_SUB_STEPS = 10; // Max sub steps to catch up with the wall clock
@@ -73,6 +74,7 @@ export default class Main {
   draw() {
     if(this.isEditing) {
       this.screen.drawGrid();
+      console.log(this.dropArea)
       this.dropArea.draw(this.screen);
     }
     this.drops.forEach(d => {
@@ -83,10 +85,9 @@ export default class Main {
 
   addDrop() {
     const diameter = randomIntBetween(15, 25);
-    const x = randomIntBetween(this.dropArea.x - this.dropArea.w / 2, this.dropArea.x + this.dropArea.w / 2);
-    const y = randomIntBetween(this.dropArea.y, this.dropArea.y + this.dropArea.h);
+    const dropPoint = this.dropArea.randomPoint();
     const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
-    const drop = new Drop(x, y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
   }
 
@@ -113,26 +114,18 @@ export default class Main {
 
   onClickCanvas(clickEvent) {
       // check if click is on edit point
+      let isJarBeingEdited = false;
       let pointBeingEdited;
       const eventPoint = this.screen.worldToScreen([clickEvent.offsetX, clickEvent.offsetY]);
       this.currentJar.editPoints.forEach((editPoint) => {
         if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
           pointBeingEdited = editPoint;
+          isJarBeingEdited = true;
         }
       });
 
-      let rectBeingEditedIndex;
-      for(let i = 0; i < this.currentJar.parts.length; i++) {
-        const rect = this.currentJar.parts[i].shape;
-        const point = new Point(...eventPoint);
-        const rotatedPoint = rotateAround(point, new Point(rect.x, rect.y + rect.h/2), rect.rotation || 0);
-        if(isPointInRect(rotatedPoint, rect)) {
-          rectBeingEditedIndex = i;
-        }
-      }
-
       // if so, add event listeners
-      if(pointBeingEdited) {
+      if(isJarBeingEdited) {
         this.canvas.onpointermove = (event) => {
           pointBeingEdited.x += event.movementX;
           pointBeingEdited.y -= event.movementY;
@@ -148,8 +141,54 @@ export default class Main {
           // discard changes
           this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
         }
-      } else if(rectBeingEditedIndex) {
+
+        return;
+      }
+
+      let rectBeingEditedIndex;
+      for(let i = 0; i < this.currentJar.parts.length; i++) {
+        const rect = this.currentJar.parts[i].shape;
+        const point = new Point(...eventPoint);
+        const rotatedPoint = rotateAround(point, new Point(rect.x, rect.y + rect.h/2), rect.rotation || 0);
+        if(isPointInRect(rotatedPoint, rect)) {
+          rectBeingEditedIndex = i;
+        }
+      }
+
+      if(rectBeingEditedIndex) {
         this.addNewPointToJar(rectBeingEditedIndex + 1, new Point(eventPoint[0], eventPoint[1]));
+        return;
+      }
+
+      let isDropAreaBeingEdited = false;
+      let editPointIndex = 0;
+      this.dropArea.editPoints.forEach((editPoint) => {
+        if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
+          pointBeingEdited = editPoint;
+          isDropAreaBeingEdited = true;
+        }
+        editPointIndex++;
+      });
+
+      if(isDropAreaBeingEdited) {
+        this.canvas.onpointermove = (event) => {
+          pointBeingEdited.x += event.movementX;
+          pointBeingEdited.y -= event.movementY;
+          pointBeingEdited._shape.x += event.movementX;
+          pointBeingEdited._shape.y -= event.movementY;
+        }
+
+        this.canvas.onpointerup = () => {
+          this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+          // check if convex
+        }
+
+        this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = () => {
+          // discard changes
+          this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+        }
+
+        return;
       }
   }
 
