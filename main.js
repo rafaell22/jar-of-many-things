@@ -9,6 +9,10 @@ const createWindow = () => {
     height: 800,
     title: "Jar of Many Things",
     autoHideMenuBar: true,
+    webPreferences: {
+      devTools: false,
+      backgroundThrottling: false,
+    }
   });
 
   //win.webContents.openDevTools();
