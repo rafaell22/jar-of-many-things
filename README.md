@@ -23,3 +23,13 @@
 - Make buttons merge like Suika
 - Double the radius size when it is 10x checkin
 - Interrupt the updates (pause) when no new button. restart when there is a drop WS event
+
+- Make a vivarium that drops frogs
+- Make the frogs periodically jump around
+
+## IDEA FOR ANOTHER PROJECT
+- TCG check-ins, open a booster when you check-in
+- open X per day
+- use bits to open more?
+- extension to display collection?
+- Trading?

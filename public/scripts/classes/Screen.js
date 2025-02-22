@@ -102,7 +102,8 @@ export default class Screen {
 
       this.ctx.lineTo(screenCoords[0], screenCoords[1]);
     }
-    ctx.lineTo(screenCoords[0], screenCoords[1]);
+    const screenCoords = this.worldToScreen([coords[0].x, coords[0].y]);
+    this.ctx.lineTo(screenCoords[0], screenCoords[1]);
 
     this.ctx.strokeStyle = strokeStyle;
     this.ctx.lineWidth = strokeWidth;
@@ -124,6 +125,8 @@ export default class Screen {
 
       this.ctx.lineTo(screenCoords[0], screenCoords[1]);
     }
+    const screenCoords = this.worldToScreen([coords[0].x, coords[0].y]);
+    this.ctx.lineTo(screenCoords[0], screenCoords[1]);
 
     this.ctx.fillStyle = fillStyle;
     this.ctx.fill();

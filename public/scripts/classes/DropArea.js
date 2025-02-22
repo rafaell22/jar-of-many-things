@@ -12,18 +12,22 @@ export default class DropArea {
     this.shape = new Polygon(coords, { strokeStyle: 'red', strokeWidth: 1 });
     this.editPoints = coords.map(c => new EditPoint(c.x, c.y));
     this.isEditing = false;
-    this.xMin = coords.reduce((min, c) => min > c.x ? c.x : min, coords[0].x);
-    this.xMax = coords.reduce((max, c) => max < c.x ? c.x : max, 0);
-    this.yMin = coords.reduce((min, c) => min > c.y ? c.y : min, coords[0].y);
-    this.yMax = coords.reduce((max, c) => max < c.y ? c.y : max, 0);
+    this.updateMinMaxValues();
+  }
+
+  updateMinMaxValues() {
+    this.xMin = this.editPoints.reduce((min, c) => min > c.x ? c.x : min, this.editPoints[0].x);
+    this.xMax = this.editPoints.reduce((max, c) => max < c.x ? c.x : max, 0);
+    this.yMin = this.editPoints.reduce((min, c) => min > c.y ? c.y : min, this.editPoints[0].y);
+    this.yMax = this.editPoints.reduce((max, c) => max < c.y ? c.y : max, 0);
   }
 
   /**
     * @param {Screen} screen
     */
   draw(screen) {
+    this.shape.draw(screen);
     if(this.isEditing) {
-      this.shape.draw(screen);
       this.editPoints.forEach(p => {
         p.draw(screen);
       });
@@ -47,12 +51,24 @@ export default class DropArea {
       const y = randomIntBetween(this.yMin, this.yMax);
 
       const point = new Point(x, y);
-      if(isPointInQuadrilateral(this.coords, point)) {
+      if(isPointInQuadrilateral(this.editPoints, point)) {
         return point;
       }
     }
 
     // if not able to find a valid point in 1000 iterations, return the centroid
     return new Point((this.xMax - this.xMin) + this.xMin, (this.yMax - this.yMin) + this.yMin);
+  }
+
+  /**
+    * @param {number} index
+    * @param {EditPoint} editPoint
+    */
+  updateEditPoint(index, editPoint) {
+    this.editPoints[index].x = editPoint.x;
+    this.editPoints[index].y = editPoint.y;
+    this.shape.coords[index].x = editPoint.x;
+    this.shape.coords[index].y = editPoint.y;
+    this.updateMinMaxValues();
   }
 }

@@ -12,7 +12,7 @@ import Screen from './Screen.js';
 import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
-import { randomIntBetween } from '../utils/math.js'
+import { randomIntBetween, RANDOM_DISTRIBUTION } from '../utils/math.js'
 import { isPointInCircle, isPointInQuadrilateral, isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
@@ -38,6 +38,7 @@ export default class Main {
     // this.screen = new Screen(this.canvas.width, this.canvas.height, '#00b140', this.ctx);
     this.screen = new Screen(window.innerWidth, window.innerHeight, '#00b140', this.ctx);
     this.world = new p2.World({gravity: [0, -50]});
+    this.world.defaultContactMaterial.restitution = 0.3;
 
     this.currentJar = null;
     if(!this.dataManagement.config.currentJar) {
@@ -74,7 +75,6 @@ export default class Main {
   draw() {
     if(this.isEditing) {
       this.screen.drawGrid();
-      console.log(this.dropArea)
       this.dropArea.draw(this.screen);
     }
     this.drops.forEach(d => {
@@ -84,10 +84,10 @@ export default class Main {
   }
 
   addDrop() {
-    const diameter = randomIntBetween(15, 25);
+    const diameter = randomIntBetween(10, 80, RANDOM_DISTRIBUTION.NORMAL, 2);
     const dropPoint = this.dropArea.randomPoint();
     const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 5, stroke: 'black', strokeWidth: 1 });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
   }
 
@@ -162,33 +162,33 @@ export default class Main {
 
       let isDropAreaBeingEdited = false;
       let editPointIndex = 0;
-      this.dropArea.editPoints.forEach((editPoint) => {
+      for(let i = 0; i < this.dropArea.editPoints.length; i++) {
+        const editPoint = this.dropArea.editPoints[i];
         if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
-          pointBeingEdited = editPoint;
           isDropAreaBeingEdited = true;
+          editPointIndex = i;
         }
-        editPointIndex++;
-      });
+      }
 
       if(isDropAreaBeingEdited) {
-        this.canvas.onpointermove = (event) => {
-          pointBeingEdited.x += event.movementX;
-          pointBeingEdited.y -= event.movementY;
-          pointBeingEdited._shape.x += event.movementX;
-          pointBeingEdited._shape.y -= event.movementY;
-        }
+        this.addEditPointerEventListeners(this.dropArea.editPoints[editPointIndex]);
 
-        this.canvas.onpointerup = () => {
-          this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
-          // check if convex
-        }
+        const onEditMoveSub = pubSub.subscribe('edit-point-move', (updatedEditPoint) => {
+          this.dropArea.updateEditPoint(editPointIndex, updatedEditPoint);
+        }); 
 
-        this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = () => {
-          // discard changes
-          this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
-        }
+        const onEditCancelSub = pubSub.subscribe('edit-point-cancel', (prevPoint) => {
+          this.dropArea.updateEditPoint(editPointIndex, prevPoint);
+          pubSub.unsubscribe('edit-point-move', onEditMoveSub);
+          pubSub.unsubscribe('edit-point-cancel', onEditCancelSub);
+          pubSub.unsubscribe('edit-point-end', onEditEndSub);
+        });
 
-        return;
+        const onEditEndSub = pubSub.subscribe('edit-point-end', () => {
+          pubSub.unsubscribe('edit-point-move', onEditMoveSub);
+          pubSub.unsubscribe('edit-point-cancel', onEditCancelSub);
+          pubSub.unsubscribe('edit-point-end', onEditEndSub);
+        });
       }
   }
 
@@ -206,6 +206,7 @@ export default class Main {
     this.canvas?.classList.add('edit');
 
     this.currentJar.edit();
+    this.dropArea.edit();
     this.isEditing = true;
     this.draw();
   }
@@ -213,7 +214,9 @@ export default class Main {
   onCancel() {
     this.canvas?.classList.remove('edit');
     
+    this.isEditing = false;
     this.currentJar.endEdit();
+    this.dropArea.endEdit();
   }
 
   onSave() {
@@ -231,7 +234,36 @@ export default class Main {
     this.addDrop();
   }
 
+  /**
+    * @param {string} color
+    */
   updateScreenBackground(color) {
     this.screen.bg = color;
+  }
+
+  /**
+    * @param {EditPoint} editPoint
+    */
+  addEditPointerEventListeners(editPoint) {
+    const point = new EditPoint(editPoint.x, editPoint.y);
+    const originalPoint = new EditPoint(editPoint.x, editPoint.y);
+    this.canvas.onpointermove = (event) => {
+      console.log(event)
+      point.x += event.movementX;
+      point.y -= event.movementY;
+
+      pubSub.publish('edit-point-move', point);
+    }
+
+    this.canvas.onpointerup = () => {
+      this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+      pubSub.publish('edit-point-end', point);
+    }
+
+    this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = () => {
+      this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+      pubSub.publish('edit-point-cancel', originalPoint);
+    }
+
   }
 }
