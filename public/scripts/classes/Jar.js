@@ -4,6 +4,7 @@ import Body from './Body.js';
 import EditPoint from './EditPoint.js';
 import Screen from './Screen.js';
 import Image from './Image.js';
+import pubSub from './PubSub.js';
 
 export default class Jar {
   /**
@@ -109,5 +110,7 @@ export default class Jar {
 
     const lastPoint = coords[coords.length - 1];
     this.editPoints.push(new EditPoint(lastPoint[0], lastPoint[1]));
+
+    pubSub.publish('on-jar-updated', this.editPoints);
   }
 }

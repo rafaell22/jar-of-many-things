@@ -4,7 +4,6 @@ import Jar from './Jar.js';
 import Drop from './Drop.js';
 import { DROP_TYPE } from './Drop.js';
 import Point from './Point.js';
-import Rect from './Rect.js';
 import EditPoint from './EditPoint.js';
 
 import Ws from './Ws.js';
@@ -13,9 +12,11 @@ import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
 import { randomIntBetween, RANDOM_DISTRIBUTION } from '../utils/math.js'
-import { isPointInCircle, isPointInQuadrilateral, isPointInRect, rotateAround } from '../utils/geometry.js';
+import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
+import {initSettings} from '../settings.js';
+import {initFooter} from '../footer.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -24,7 +25,6 @@ const DROP_COLORS = ['blue', 'cyan', 'pink', 'orange', 'purple', 'red', 'yellow'
 export default class Main {
   constructor() {
     this.drops = [];
-    this.dataManagement = new DataManagement();
     this.isEditing = false;
 
     this.canvas = /** @type {HTMLCanvasElement|null} */ (document.getElementById('world'));
@@ -41,21 +41,27 @@ export default class Main {
     this.world.defaultContactMaterial.restitution = 0.3;
 
     this.currentJar = null;
-    if(!this.dataManagement.config.currentJar) {
-      this.dataManagement.config.currentJar = this.dataManagement.config.jars[0].name;
-    }
-    const jarConfig = this.dataManagement.config.jars.find((j) => j.name === this.dataManagement.config.currentJar);
-    this.currentJar = new Jar(jarConfig?.coords ?? [], this.world, jarConfig?.image);
-
-    this.dropArea = new DropArea([new Point(427, 500), new Point(573, 500), new Point(573, 600), new Point(427, 600)])
 
     this.FIXED_TIME_STEP = 1 / 60; // seconds
     this.MAX_SUB_STEPS = 10; // Max sub steps to catch up with the wall clock
-    start(this.start.bind(this));
 
+    this.dataManagement = new DataManagement();
+    this.configLoadedSub = pubSub.subscribe('on-config-loaded', this.onConfigLoaded.bind(this));
+  }
+
+  onConfigLoaded() {
+    const jarConfig = this.dataManagement.config.jar;
+    this.currentJar = new Jar(jarConfig?.coords ?? [], this.world, jarConfig?.image);
+    this.dropArea = new DropArea(this.dataManagement.config.dropArea.coords.map(p => new Point(p[0], p[1])))
     this.initEditEventListeners();
     this.initWebsockets();
     initResizeEvent(this.canvas);
+    initSettings(this.dataManagement.config);
+    initFooter();
+
+    pubSub.unsubscribe('on-config-loaded', this.configLoadedSub);
+
+    start(this.start.bind(this));
   }
 
   /**
@@ -75,17 +81,20 @@ export default class Main {
   draw() {
     if(this.isEditing) {
       this.screen.drawGrid();
-      this.dropArea.draw(this.screen);
+      this.dropArea?.draw(this.screen);
     }
     this.drops.forEach(d => {
       d.draw(this.screen);
     });
-    this.currentJar.draw(this.screen);
+    this.currentJar?.draw(this.screen);
   }
 
   addDrop() {
-    const diameter = randomIntBetween(10, 80, RANDOM_DISTRIBUTION.NORMAL, 2);
-    const dropPoint = this.dropArea.randomPoint();
+    const diameter = randomIntBetween(
+      this.dataManagement.config.drops[0].diameter.min, 
+      this.dataManagement.config.drops[0].diameter.max, 
+      this.dataManagement.config.drops[0].diameter.distribution, 2);
+    const dropPoint = this.dropArea?.randomPoint();
     const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
     const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
@@ -196,7 +205,7 @@ export default class Main {
     this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
     pubSub.subscribe('on-edit-jar', this.onEdit.bind(this));
     pubSub.subscribe('on-cancel-edit-jar', this.onCancel.bind(this));
-    pubSub.subscribe('on-save-edit-jar', this.onSave.bind(this));
+    pubSub.subscribe('on-save-settings', this.onSaveSettings.bind(this));
     pubSub.subscribe('on-reset-jar', this.onReset.bind(this));
     pubSub.subscribe('on-drop', this.onDrop.bind(this));
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
@@ -219,8 +228,8 @@ export default class Main {
     this.dropArea.endEdit();
   }
 
-  onSave() {
-    console.log(this.currentJar.editPoints);
+  onSaveSettings() {
+    this.dataManagement.save();
   }
 
   onReset() {

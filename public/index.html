@@ -31,25 +31,45 @@
           <input type="color" id="uiColor" value="#d4ce46" />
           <label>UI</label>
         </div>
-        <p>Jar</p>
+        <p>Drops</p>
         <div class="row">
-          <input type="file" id="jar-bg-src" accept="image/png, image/jpeg" />
-          <label>Jar Image</label>
+          <input type="number" id="drops-diameter-min" value="10" />
+          <label>Diameter/Min</label>
         </div>
         <div class="row">
-          <input type="number" id="jar-bg-w" />
-          <label>Jar Image Width</label>
+          <input type="number" id="drops-diameter-max" value="80" />
+          <label>Diameter/Max</label>
         </div>
         <div class="row">
-          <input type="number" id="jar-bg-h" />
-          <label>Jar Image Height</label>
+          <select id="drops-diameter-distribution">
+            <option value="UNIFORM">Uniform</option>
+            <option value="NORMAL" selected>Normal</option>
+          </select>
+          <label>Diameter/Distribution</label>
         </div>
-      </div>
-
-      <div id="save-dialog" class="hidden above-overlay-1">
         <div class="row">
-          <input type="text" id="save-dialog-jar-name" value="" />
-          <label>Name</label>
+          <div id="save" class="icon-button">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="32"
+   height="32"
+   viewBox="0 0 8.4666662 8.4666662"
+   version="1.1"
+   id="svg8"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+   <g>
+      <path
+       id="path2"
+       style="color:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.226772;-inkscape-stroke:none"
+       d="M 0.56275635 0.15192871 A 0.40956846 0.40956846 0 0 0 0.15244548 0.56223958 L 0.15244548 7.9039103 A 0.40956846 0.40956846 0 0 0 0.56275635 8.3142212 L 2.0546549 8.3142212 L 6.4120117 8.3142212 L 7.9044271 8.3142212 A 0.40956846 0.40956846 0 0 0 8.3142212 7.9039103 L 8.3142212 2.3414591 A 0.40956846 0.40956846 0 0 0 8.1932983 2.0525879 L 6.4140788 0.27336833 A 0.40956846 0.40956846 0 0 0 6.1252075 0.15192871 L 0.56275635 0.15192871 z M 0.9704834 0.97255046 L 5.9551921 0.97255046 L 7.4941162 2.5114746 L 7.4941162 7.4956665 L 6.8202555 7.4956665 L 6.8202555 4.7066895 A 0.40956846 0.40956846 0 0 0 6.4120117 4.2984456 L 2.0546549 4.2984456 A 0.40956846 0.40956846 0 0 0 1.6443441 4.7066895 L 1.6443441 7.4956665 L 0.9704834 7.4956665 L 0.9704834 0.97255046 z M 2.4649658 5.1170003 L 6.0017008 5.1170003 L 6.0017008 7.4956665 L 2.4649658 7.4956665 L 2.4649658 5.1170003 z " />
+   </g>
+</svg>
+          </div>
         </div>
       </div>
 
@@ -97,28 +117,7 @@
             </svg>
           </div>
 
-          <div id="save" class="hidden">
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   width="32"
-   height="32"
-   viewBox="0 0 8.4666662 8.4666662"
-   version="1.1"
-   id="svg8"
-   xml:space="preserve"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:dc="http://purl.org/dc/elements/1.1/">
-   <g>
-      <path
-       id="path2"
-       style="color:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-dashoffset:0.226772;-inkscape-stroke:none"
-       d="M 0.56275635 0.15192871 A 0.40956846 0.40956846 0 0 0 0.15244548 0.56223958 L 0.15244548 7.9039103 A 0.40956846 0.40956846 0 0 0 0.56275635 8.3142212 L 2.0546549 8.3142212 L 6.4120117 8.3142212 L 7.9044271 8.3142212 A 0.40956846 0.40956846 0 0 0 8.3142212 7.9039103 L 8.3142212 2.3414591 A 0.40956846 0.40956846 0 0 0 8.1932983 2.0525879 L 6.4140788 0.27336833 A 0.40956846 0.40956846 0 0 0 6.1252075 0.15192871 L 0.56275635 0.15192871 z M 0.9704834 0.97255046 L 5.9551921 0.97255046 L 7.4941162 2.5114746 L 7.4941162 7.4956665 L 6.8202555 7.4956665 L 6.8202555 4.7066895 A 0.40956846 0.40956846 0 0 0 6.4120117 4.2984456 L 2.0546549 4.2984456 A 0.40956846 0.40956846 0 0 0 1.6443441 4.7066895 L 1.6443441 7.4956665 L 0.9704834 7.4956665 L 0.9704834 0.97255046 z M 2.4649658 5.1170003 L 6.0017008 5.1170003 L 6.0017008 7.4956665 L 2.4649658 7.4956665 L 2.4649658 5.1170003 z " />
-   </g>
-</svg>
-          </div>
+          
           <div id="cancel" class="hidden">
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg

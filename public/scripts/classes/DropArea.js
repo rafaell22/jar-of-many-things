@@ -4,6 +4,7 @@ import EditPoint from './EditPoint.js';
 import Point from './Point.js';
 import Polygon from './Polygon.js';
 import Screen from './Screen.js';
+import pubSub from './PubSub.js';
 
 const MAX_RANDOM_ITERATIONS = 1000;
 
@@ -70,5 +71,7 @@ export default class DropArea {
     this.shape.coords[index].x = editPoint.x;
     this.shape.coords[index].y = editPoint.y;
     this.updateMinMaxValues();
+
+    pubSub.publish('on-drop-area-updated', this.editPoints);
   }
 }

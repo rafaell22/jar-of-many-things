@@ -15,6 +15,7 @@
   "description": "App to visually track daily checkins during stream",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
+    "electron-store": "^10.0.1",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "ws": "^8.18.0"
