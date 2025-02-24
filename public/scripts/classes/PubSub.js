@@ -30,7 +30,7 @@ export class PubSub {
    * @param  {string} event                   Name of the event to be published
    * @param  {array}  [args=[]]               Array of arguments to be passed to the subscribers' callbacks
    */
-  publish(event, args = []) {
+  publish(event, ...args) {
     if(this.events[event]) {
         this.events[event].forEach(listener => {
             listener.callback(...args);

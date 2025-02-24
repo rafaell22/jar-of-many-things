@@ -1,7 +1,9 @@
 # jar-of-many-things
 
 ## TODO
-- Make it into an electron app
+- ~~Make it into an electron app~~
+- Make drop area editable
+- Make button radius editable
 - Save data/configs
 - Load data/configs
 - Reset button
@@ -15,3 +17,19 @@
 - Create new Drop
 - Edit existing Drop
 - Have multiple Jars
+- Add parameter to the GET request that gets the chat color and then drop it with same color
+- Add a parameter to the GET request to have a specific button size (for example: when user check-ins X amounts of times, they get a bigger button)
+- Have a bigger variation on buttons sizes
+- Make buttons merge like Suika
+- Double the radius size when it is 10x checkin
+- Interrupt the updates (pause) when no new button. restart when there is a drop WS event
+
+- Make a vivarium that drops frogs
+- Make the frogs periodically jump around
+
+## IDEA FOR ANOTHER PROJECT
+- TCG check-ins, open a booster when you check-in
+- open X per day
+- use bits to open more?
+- extension to display collection?
+- Trading?
