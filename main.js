@@ -25,14 +25,14 @@ const createWindow = () => {
     title: 'Jar of Many Things',
     autoHideMenuBar: true,
     webPreferences: {
-      devTools: false,
+      devTools: true,
       backgroundThrottling: false,
       preload: join(__dirname, 'preload.js'),
       contextIsolation: true,
     }
   });
 
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
 
   win.loadFile('./public/index.html');
 };

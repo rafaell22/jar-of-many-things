@@ -24,8 +24,9 @@ export default class Ws {
               const messageBody = JSON.parse(webSocketMessage.data);
 
               const event = messageBody.event;
+              const data = messageBody.data;
               if(event && this.events[event]) {
-                  this.events[event].cb(messageBody);
+                  this.events[event].cb(data);
               }
             }
             resolve();

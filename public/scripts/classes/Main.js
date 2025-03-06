@@ -11,16 +11,23 @@ import Screen from './Screen.js';
 import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
-import { randomIntBetween, RANDOM_DISTRIBUTION } from '../utils/math.js'
+import { randomIntBetween } from '../utils/math.js'
 import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
 import {initSettings} from '../settings.js';
 import {initFooter} from '../footer.js';
+import {svgToPng} from '../utils/svgToImg.js';
+import getButtonSvg from '../../assets/getButtonSvg.js';
+import {rgbToHex} from '../utils/colors.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
-const DROP_COLORS = ['blue', 'cyan', 'pink', 'orange', 'purple', 'red', 'yellow'];
+const MOUSE_BUTTONS = {
+  LEFT: 0,
+  MIDDLE: 1,
+  RIGHT: 2,
+};
 
 export default class Main {
   constructor() {
@@ -89,14 +96,18 @@ export default class Main {
     this.currentJar?.draw(this.screen);
   }
 
-  addDrop() {
+  async addDrop({ color }) {
     const diameter = randomIntBetween(
       this.dataManagement.config.drops[0].diameter.min, 
       this.dataManagement.config.drops[0].diameter.max, 
       this.dataManagement.config.drops[0].diameter.distribution, 2);
     const dropPoint = this.dropArea?.randomPoint();
-    const color = DROP_COLORS[randomIntBetween(0, DROP_COLORS.length - 1)];
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: `./assets/button_${color}.png`}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
+    console.log('color: ', color)
+    console.log('typeof color: ', typeof color)
+    const buttonColor = color || rgbToHex(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255));
+    console.log('buttonColor: ', buttonColor);
+    const buttonImgSrc = await svgToPng(getButtonSvg(buttonColor));
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
   }
 
@@ -111,52 +122,48 @@ export default class Main {
   }
 
   addNewPointToJar(index, point) { 
-    this.currentJar.editPoints.splice(index, 0, new EditPoint(point.x, point.y));
-    this.currentJar.calculateParts(this.world)
+    this.currentJar?.editPoints.splice(index, 0, new EditPoint(point.x, point.y));
+    this.currentJar?.calculateParts(this.world)
   }
 
-  updateJarCoordinates() {
-    // save points location/update points
-    this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
-    this.currentJar.calculateParts(this.world);
+  /**
+    * @param {number} pointIndex
+    * @param {number} button
+    */
+  handleClickOnJarEditPoint(pointIndex, button) {
+    if(button === MOUSE_BUTTONS.RIGHT) {
+      this.currentJar?.removePoint(pointIndex, this.world);
+      return;
+    }
+
+    if(button === MOUSE_BUTTONS.LEFT) {
+      this.canvas.onpointermove = ((event) => this.currentJar?.updatePoint(pointIndex, event.movementX, event.movementY)).bind(this);
+
+      this.canvas.onpointerup = () => {
+        this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+        this.currentJar?.calculateParts(this.world);
+      };
+
+      this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = () => {
+        // discard changes
+        this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
+      }
+      return;
+    }
   }
 
   onClickCanvas(clickEvent) {
-      // check if click is on edit point
-      let isJarBeingEdited = false;
-      let pointBeingEdited;
+      // check if click is on jar edit point
       const eventPoint = this.screen.worldToScreen([clickEvent.offsetX, clickEvent.offsetY]);
-      this.currentJar.editPoints.forEach((editPoint) => {
-        if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
-          pointBeingEdited = editPoint;
-          isJarBeingEdited = true;
-        }
-      });
-
-      // if so, add event listeners
-      if(isJarBeingEdited) {
-        this.canvas.onpointermove = (event) => {
-          pointBeingEdited.x += event.movementX;
-          pointBeingEdited.y -= event.movementY;
-          pointBeingEdited._shape.x += event.movementX;
-          pointBeingEdited._shape.y -= event.movementY;
-        }
-
-        this.canvas.onpointerup = () => {
-          this.updateJarCoordinates();
-        }
-
-        this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = () => {
-          // discard changes
-          this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
-        }
-
+      const jarPointIndex = this.currentJar?.findEditPointIndex(new Point(...eventPoint));
+      if(jarPointIndex && jarPointIndex >= 0) {
+        this.handleClickOnJarEditPoint(jarPointIndex, clickEvent.button);
         return;
       }
 
       let rectBeingEditedIndex;
-      for(let i = 0; i < this.currentJar.parts.length; i++) {
-        const rect = this.currentJar.parts[i].shape;
+      for(let i = 0; i < (this.currentJar?.parts.length ?? 0); i++) {
+        const rect = this.currentJar?.parts[i].shape;
         const point = new Point(...eventPoint);
         const rotatedPoint = rotateAround(point, new Point(rect.x, rect.y + rect.h/2), rect.rotation || 0);
         if(isPointInRect(rotatedPoint, rect)) {
@@ -171,8 +178,8 @@ export default class Main {
 
       let isDropAreaBeingEdited = false;
       let editPointIndex = 0;
-      for(let i = 0; i < this.dropArea.editPoints.length; i++) {
-        const editPoint = this.dropArea.editPoints[i];
+      for(let i = 0; i < this.dropArea?.editPoints.length; i++) {
+        const editPoint = this.dropArea?.editPoints[i];
         if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
           isDropAreaBeingEdited = true;
           editPointIndex = i;
@@ -180,14 +187,14 @@ export default class Main {
       }
 
       if(isDropAreaBeingEdited) {
-        this.addEditPointerEventListeners(this.dropArea.editPoints[editPointIndex]);
+        this.addEditPointerEventListeners(this.dropArea?.editPoints[editPointIndex]);
 
         const onEditMoveSub = pubSub.subscribe('edit-point-move', (updatedEditPoint) => {
-          this.dropArea.updateEditPoint(editPointIndex, updatedEditPoint);
+          this.dropArea?.updateEditPoint(editPointIndex, updatedEditPoint);
         }); 
 
         const onEditCancelSub = pubSub.subscribe('edit-point-cancel', (prevPoint) => {
-          this.dropArea.updateEditPoint(editPointIndex, prevPoint);
+          this.dropArea?.updateEditPoint(editPointIndex, prevPoint);
           pubSub.unsubscribe('edit-point-move', onEditMoveSub);
           pubSub.unsubscribe('edit-point-cancel', onEditCancelSub);
           pubSub.unsubscribe('edit-point-end', onEditEndSub);
@@ -203,19 +210,25 @@ export default class Main {
 
   initEditEventListeners() {
     this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
+    this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
     pubSub.subscribe('on-edit-jar', this.onEdit.bind(this));
     pubSub.subscribe('on-cancel-edit-jar', this.onCancel.bind(this));
     pubSub.subscribe('on-save-settings', this.onSaveSettings.bind(this));
     pubSub.subscribe('on-reset-jar', this.onReset.bind(this));
     pubSub.subscribe('on-drop', this.onDrop.bind(this));
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
+
+    this.world.on('impact', (bodyA, bodyB) => {
+      console.log(`impact - bodyA: `, bodyA);
+      console.log(`impact - bodyB: `, bodyB);
+    })
   }
 
   onEdit() {
     this.canvas?.classList.add('edit');
 
-    this.currentJar.edit();
-    this.dropArea.edit();
+    this.currentJar?.edit();
+    this.dropArea?.edit();
     this.isEditing = true;
     this.draw();
   }
@@ -224,8 +237,8 @@ export default class Main {
     this.canvas?.classList.remove('edit');
     
     this.isEditing = false;
-    this.currentJar.endEdit();
-    this.dropArea.endEdit();
+    this.currentJar?.endEdit();
+    this.dropArea?.endEdit();
   }
 
   onSaveSettings() {
@@ -273,6 +286,5 @@ export default class Main {
       this.canvas.onpointermove = this.canvas.onpointerup = this.canvas.onpointerout = this.canvas.onpointerleave = this.canvas.onpointercancel = null;
       pubSub.publish('edit-point-cancel', originalPoint);
     }
-
   }
 }

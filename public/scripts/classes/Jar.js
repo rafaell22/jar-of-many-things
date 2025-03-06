@@ -1,10 +1,11 @@
-import {radToDeg} from '../utils/geometry.js';
+import { radToDeg, isPointInCircle } from '../utils/geometry.js';
 import Rect from './Rect.js';
 import Body from './Body.js';
 import EditPoint from './EditPoint.js';
 import Screen from './Screen.js';
 import Image from './Image.js';
 import pubSub from './PubSub.js';
+import Point from './Point.js';
 
 export default class Jar {
   /**
@@ -112,5 +113,44 @@ export default class Jar {
     this.editPoints.push(new EditPoint(lastPoint[0], lastPoint[1]));
 
     pubSub.publish('on-jar-updated', this.editPoints);
+  }
+
+  /**
+    * @param {Point} point
+    * @returns {number}
+    */
+  findEditPointIndex(point) {
+    for(let i = 0; i < this.editPoints.length; i++) {
+      const editPoint = this.editPoints[i];
+      if(isPointInCircle(point, editPoint.shape)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+    * @param {number} index
+    */
+  removePoint(index, world) {
+    if(this.editPoints[index]) {
+      this.editPoints.splice(index, 1);
+      this.calculateParts(world);
+    }
+  }
+
+  /**
+    * @param {number} pointIndex
+    * @param {number} dx
+    * @param {number} dy
+    */
+  updatePoint(pointIndex, dx, dy) {
+    const point = this.editPoints[pointIndex];
+    if(point) {
+      point.x += dx;
+      point.y -= dy;
+      point._shape.x += dx;
+      point._shape.y -= dy;
+    }
   }
 }

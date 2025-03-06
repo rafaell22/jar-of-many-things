@@ -6,13 +6,7 @@ export const loadImage = (src) => {
       console.log('Image loaded!');
       resolve(image);
     };
-    /*
-    elImage.addEventListener('error', function(errorLoadingImage) {
-      console.log('Failed to load image!');
-      console.log(errorLoadingImage.message);
-      reject(errorLoadingImage);
-    });
-    */
+
     image.src = src;
   });
 }
