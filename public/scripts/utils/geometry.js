@@ -2,6 +2,7 @@ import Point from '../classes/Point.js';
 import Circle from '../classes/Circle.js';
 import Vector2 from '../classes/Vector2.js';
 import Vector3 from '../classes/Vector2.js';
+import Rect from '../classes/Rect.js';
 
 import { determinant } from './math.js';
 
@@ -110,3 +111,13 @@ export const getConvexPolygon = (coords) => {
   
   return null;
 }
+
+/**
+ * @param {Circle} c
+ * @param {Rect} r
+ * @returns {boolean}
+ */
+  export const isCircleInRect = (c, r) => (c.x + 2 * c.radius) > (r.x - r.w / 2) ||
+  (c.x - 2 * c.radius) < (r.x + r.w / 2) ||
+  (c.y + 2 * c.radius) > (r.y) ||
+  (c.y - 2 * c.radius) < (r.y + r.h);

@@ -21,7 +21,6 @@ export function randomIntBetween(min, max, distribution, skew) {
 
   if(distribution === RANDOM_DISTRIBUTION.NORMAL) {
     const num = randn_bm(min, max, skew);
-    console.log(num)
     return num;
   }
 }

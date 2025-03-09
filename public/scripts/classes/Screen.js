@@ -1,3 +1,6 @@
+import {isCircleInRect} from '../utils/geometry.js';
+import Circle from './Circle.js';
+import Rect from './Rect.js';
 import Image from './Image.js';
 
 export default class Screen {
@@ -9,8 +12,9 @@ export default class Screen {
 }
 
   clear() {
-    this.ctx.fillStyle = this.bg;
-    this.ctx.fillRect(0, 0, this.w, this.h);
+    this.ctx.clearRect(0, 0, this.w, this.h);
+    // this.ctx.fillStyle = this.bg;
+    // this.ctx.fillRect(0, 0, this.w, this.h);
   }
 
   worldToScreen(point) {
@@ -169,5 +173,18 @@ export default class Screen {
   drawImage(image, x, y, w, h) {
     const screenCoords = this.worldToScreen([ x, y ]);
     this.ctx.drawImage(image, screenCoords[0] - w / 2, screenCoords[1] - h, w, h);
+  }
+
+  /**
+    * @param {Shape} shape
+    * @returns {boolean}
+    */
+  isObjectInsideScreen(shape) {
+    switch(true) {
+      case (shape instanceof Circle):
+        return isCircleInRect(shape, new Rect(this.w / 2, 0, this.w, this.h, {}));
+    }
+
+    return true;
   }
 }

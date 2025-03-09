@@ -44,7 +44,7 @@ export default class Main {
 
     // this.screen = new Screen(this.canvas.width, this.canvas.height, '#00b140', this.ctx);
     this.screen = new Screen(window.innerWidth, window.innerHeight, '#00b140', this.ctx);
-    this.world = new p2.World({gravity: [0, -50]});
+    this.world = new p2.World({gravity: [0, -50], sleepMode: p2.World.BODY_SLEEPING, });
     this.world.defaultContactMaterial.restitution = 0.3;
 
     this.currentJar = null;
@@ -54,6 +54,8 @@ export default class Main {
 
     this.dataManagement = new DataManagement();
     this.configLoadedSub = pubSub.subscribe('on-config-loaded', this.onConfigLoaded.bind(this));
+
+    this.buttonImgCache = {};
   }
 
   onConfigLoaded() {
@@ -78,9 +80,18 @@ export default class Main {
     // Move bodies forward in time
     this.world.step(this.FIXED_TIME_STEP, dt / 1000, this.MAX_SUB_STEPS);
 
-    this.drops.forEach((d) => {
-      d.update();
-    });
+    const dropsToRemove = [];
+    for(let i = 0; i < this.drops.length; i++) {
+      if(!this.screen.isObjectInsideScreen(this.drops[i].shape)) {
+        this.drops[i].remove(this.world);
+        dropsToRemove.push(i);
+        continue;
+      } 
+
+      this.drops[i].update();
+    }
+
+    dropsToRemove.forEach(i => this.drops.splice(i, 1));
     this.screen.clear();
     this.draw();
   };
@@ -96,17 +107,24 @@ export default class Main {
     this.currentJar?.draw(this.screen);
   }
 
-  async addDrop({ color }) {
+  /**
+    * @param {object} [data]
+    * @param {string} data.color
+    */
+  async addDrop(data) {
+    const color = data?.color;
     const diameter = randomIntBetween(
       this.dataManagement.config.drops[0].diameter.min, 
       this.dataManagement.config.drops[0].diameter.max, 
       this.dataManagement.config.drops[0].diameter.distribution, 2);
     const dropPoint = this.dropArea?.randomPoint();
-    console.log('color: ', color)
-    console.log('typeof color: ', typeof color)
     const buttonColor = color || rgbToHex(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255));
-    console.log('buttonColor: ', buttonColor);
-    const buttonImgSrc = await svgToPng(getButtonSvg(buttonColor));
+    let buttonImgSrc;
+    if(this.buttonImgCache[buttonColor]) {
+      buttonImgSrc = this.buttonImgCache[buttonColor];
+    } else {
+      buttonImgSrc = this.buttonImgCache[buttonColor] = await svgToPng(getButtonSvg(buttonColor));
+    }
     const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
     this.drops.push(drop);
   }
@@ -219,8 +237,8 @@ export default class Main {
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
 
     this.world.on('impact', (bodyA, bodyB) => {
-      console.log(`impact - bodyA: `, bodyA);
-      console.log(`impact - bodyB: `, bodyB);
+      // console.log(`impact - bodyA: `, bodyA);
+      // console.log(`impact - bodyB: `, bodyB);
     })
   }
 
@@ -270,7 +288,7 @@ export default class Main {
     const point = new EditPoint(editPoint.x, editPoint.y);
     const originalPoint = new EditPoint(editPoint.x, editPoint.y);
     this.canvas.onpointermove = (event) => {
-      console.log(event)
+      // console.log(event)
       point.x += event.movementX;
       point.y -= event.movementY;
 

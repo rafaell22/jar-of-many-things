@@ -76,4 +76,8 @@ export default class Drop {
       this.image.draw(screen);
     }
   }
+
+  remove(world) {
+    world.removeBody(this.body);
+  }
 }

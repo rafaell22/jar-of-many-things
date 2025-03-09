@@ -24,17 +24,21 @@ const createWindow = () => {
     height: 800,
     title: 'Jar of Many Things',
     autoHideMenuBar: true,
+    backgroundColor: "#00000000",
+    transparent: true,
+    frame: false,
     webPreferences: {
-      devTools: true,
+      devTools: false,
       backgroundThrottling: false,
       preload: join(__dirname, 'preload.js'),
       contextIsolation: true,
     }
   });
 
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
 
   win.loadFile('./public/index.html');
+  win.setBackgroundColor('#00000000')
 };
 
 app.whenReady().then(() => {
