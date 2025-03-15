@@ -5,6 +5,7 @@ import Drop from './Drop.js';
 import { DROP_TYPE } from './Drop.js';
 import Point from './Point.js';
 import EditPoint from './EditPoint.js';
+import Audio from './Audio.js';
 
 import Ws from './Ws.js';
 import Screen from './Screen.js';
@@ -56,6 +57,8 @@ export default class Main {
     this.configLoadedSub = pubSub.subscribe('on-config-loaded', this.onConfigLoaded.bind(this));
 
     this.buttonImgCache = {};
+
+    this.audio = new Audio(['button-drop']);
   }
 
   onConfigLoaded() {
@@ -236,10 +239,47 @@ export default class Main {
     pubSub.subscribe('on-drop', this.onDrop.bind(this));
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
 
-    this.world.on('impact', (bodyA, bodyB) => {
-      // console.log(`impact - bodyA: `, bodyA);
-      // console.log(`impact - bodyB: `, bodyB);
-    })
+    this.world.on('impact', ({ bodyA, bodyB }) => {
+      console.log('impact!!')
+      console.log('bodyA: ', bodyA);
+      console.log('bodyB: ', bodyB);
+      // Two separate loops to find only the first match for each body
+      // and to only play 1 sound at a time
+      for(let i = 0; i < this.drops.length; i++) {
+        if(this.drops[i].body === bodyA) {
+          console.log(1)
+          if(this.drops[i].isFirstImpact) {
+            console.log(2)
+            this.audio.play('button-drop');
+            this.drops[i].isFirstImpact = false;
+            return;
+          } 
+
+          break;
+        }
+      }
+
+      for(let i = 0; i < this.drops.length; i++) {
+        if(this.drops[i].body === bodyB) {
+          console.log(3)
+          if(this.drops[i].isFirstImpact) {
+            console.log(4)
+            this.audio.play('button-drop');
+            this.drops[i].isFirstImpact = false;
+            return;
+          } 
+
+          break;
+        }
+      }
+    });
+
+    //@ts-ignore
+    document.querySelector('#minimize-window').onclick = window.electronApi.minimizeWindow;
+    //@ts-ignore
+    document.querySelector('#maximize-window').onclick = window.electronApi.maximizeWindow;
+    //@ts-ignore
+    document.querySelector('#close-window').onclick = window.electronApi.closeWindow;
   }
 
   onEdit() {

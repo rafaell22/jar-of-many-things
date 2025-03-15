@@ -55,6 +55,8 @@ export default class Drop {
 
     this._body.addShape(this.shape.shape);
     world.addBody(this.body);
+
+    this.isFirstImpact = true;
   }
 
   get body() {

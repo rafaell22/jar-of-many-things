@@ -15,6 +15,7 @@ body {
     padding: 0;
     background-color: rgba(0, 0, 0, 0); /* Transparent background */
     overflow: hidden;
+    border: 1px solid black;
 }
 
 .hidden {
@@ -60,6 +61,31 @@ body {
 
 body {
   margin: 0;
+}
+
+header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 24px;
+  width: 100%;
+  border-bottom: 1px solid white;
+  background-color: #333;
+  -webkit-app-region: drag;
+}
+
+header span {
+  -webkit-app-region: no-drag;
+  float: right;
+  height: 24px;
+  vertical-align: middle;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  font-family: sans-serif;
+  line-height: 24px;
+  font-size: 16px;
+  width: 20px;
 }
 
 input[type="text"], input[type="number"], select {
@@ -176,7 +202,7 @@ input[type="checkbox"] + label {
 #footer {
     position: absolute;
     right: 0;
-    top: 0;
+    top: 24px;
     width: 48px;
     height: 100%;
     padding: 10px;
@@ -192,14 +218,6 @@ input[type="checkbox"] + label {
 
 #footer svg {
   fill: var(--secondary-color);
-}
-
-#resize {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    color: var(--secondary-color);
-    opacity: 60%;
 }
 
 #world.edit {

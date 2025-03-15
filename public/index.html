@@ -12,9 +12,11 @@
     <body>
       <!--this library helps to debug when developping using a mobile device-->
       <!--<script src="https://cdn.jsdelivr.net/gh/rafaell22/Console@1.2.0/console.js"></script>-->
-      <div id="resize" class="bare-view hidden">
-        <img src="./assets/resize.svg" />
-      </div>
+      <header class="unselectable">
+        <span id="close-window">X</span>
+        <span id="maximize-window">□</span>
+        <span id="minimize-window">_</span>
+      </header>
 
       <div id="dialog-overlay" class="overlay hidden layer-overlay"></div>
       <div id="loader" class="overlay hidden layer-loader">
@@ -179,7 +181,7 @@
 
       <canvas id="world" width="300" height="600"></canvas>
 
-      <!--<audio src="./assets/countdown.wav"></audio>-->
+      <audio id="button-drop" src="./assets/coins-in-a-glass.wav"></audio>
       <script src="./scripts/libraries/p2.min.js" type="text/javascript"></script>
       <script type="module" src="./scripts/main.js"></script>
 
