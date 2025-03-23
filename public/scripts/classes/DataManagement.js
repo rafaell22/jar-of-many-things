@@ -44,6 +44,7 @@ const DEFAULT_CONFIG = {
   }],
   chromaColor: '#00b140',
   uiColor: '#d4ce46',
+  recoverDrops: true,
 };
 
 export default class DataManagement {
@@ -70,9 +71,10 @@ export default class DataManagement {
 
     pubSub.subscribe('on-drop-area-updated', this.onDropAreaUpdated.bind(this));
     pubSub.subscribe('on-jar-updated', this.onJarUpdated.bind(this));
-    pubSub.subscribe('on-change-min-diameter', this.onDropUpdated.bind(this))
-    pubSub.subscribe('on-change-max-diameter', this.onDropUpdated.bind(this))
-    pubSub.subscribe('on-change-diameter-distribution', this.onDropUpdated.bind(this))
+    pubSub.subscribe('on-change-min-diameter', this.onDropUpdated.bind(this));
+    pubSub.subscribe('on-change-max-diameter', this.onDropUpdated.bind(this));
+    pubSub.subscribe('on-change-diameter-distribution', this.onDropUpdated.bind(this));
+    pubSub.subscribe('on-change-recover-drops', this.onRecoverDropsUpdated.bind(this));
   }
 
   save() {
@@ -91,5 +93,9 @@ export default class DataManagement {
     this.config.drops[0].diameter.min = diameterConfig.minDiameter ?? this.config.drops[0].diameter.min;
     this.config.drops[0].diameter.max = diameterConfig.maxDiameter ?? this.config.drops[0].diameter.max;
     this.config.drops[0].diameter.distribution = diameterConfig.diameterDistribution ?? this.config.drops[0].diameter.distribution;
+  }
+
+  onRecoverDropsUpdated(recoverDrops) {
+    this.config.recoverDrops = recoverDrops ?? this.config.recoverDrops;
   }
 }

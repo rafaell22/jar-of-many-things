@@ -20,7 +20,7 @@ import {initSettings} from '../settings.js';
 import {initFooter} from '../footer.js';
 import {svgToPng} from '../utils/svgToImg.js';
 import getButtonSvg from '../../assets/getButtonSvg.js';
-import {rgbToHex} from '../utils/colors.js';
+import {areColorsClose, rgbToHex} from '../utils/colors.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -58,7 +58,7 @@ export default class Main {
 
     this.buttonImgCache = {};
 
-    this.audio = new Audio(['button-drop']);
+    this.audio = new Audio(['button-drop', 'button-merge']);
   }
 
   onConfigLoaded() {
@@ -94,7 +94,20 @@ export default class Main {
       this.drops[i].update();
     }
 
-    dropsToRemove.forEach(i => this.drops.splice(i, 1));
+
+    dropsToRemove.forEach(i => {
+      if(this.dataManagement.config.recoverDrops) {
+        const drop = this.drops[i];
+        if(drop?.canRetry()) {
+          this.addDrop({
+            color: drop.color,
+            diameter: 2 * drop.shape.radius,
+            retries: (drop.retries + 1),
+          });
+        }
+      }
+      this.drops.splice(i, 1)
+    });
     this.screen.clear();
     this.draw();
   };
@@ -113,22 +126,27 @@ export default class Main {
   /**
     * @param {object} [data]
     * @param {string} data.color
+    * @param {number} [data.diameter]
+    * @param {object} [data.dropPoint]
+    * @param {number} data.dropPoint.x
+    * @param {number} data.dropPoint.y
+    * @param {number} [data.maxRadius]
+    * @param {number} [data.retries]
     */
   async addDrop(data) {
-    const color = data?.color;
-    const diameter = randomIntBetween(
+    const diameter = data?.diameter ?? randomIntBetween(
       this.dataManagement.config.drops[0].diameter.min, 
       this.dataManagement.config.drops[0].diameter.max, 
       this.dataManagement.config.drops[0].diameter.distribution, 2);
-    const dropPoint = this.dropArea?.randomPoint();
-    const buttonColor = color || rgbToHex(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255));
+    const dropPoint = data?.dropPoint ? new Point(data.dropPoint.x, data.dropPoint.y) : this.dropArea?.randomPoint();
+    const buttonColor = data?.color || rgbToHex(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255));
     let buttonImgSrc;
     if(this.buttonImgCache[buttonColor]) {
       buttonImgSrc = this.buttonImgCache[buttonColor];
     } else {
       buttonImgSrc = this.buttonImgCache[buttonColor] = await svgToPng(getButtonSvg(buttonColor));
     }
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1 });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries });
     this.drops.push(drop);
   }
 
@@ -177,7 +195,7 @@ export default class Main {
       // check if click is on jar edit point
       const eventPoint = this.screen.worldToScreen([clickEvent.offsetX, clickEvent.offsetY]);
       const jarPointIndex = this.currentJar?.findEditPointIndex(new Point(...eventPoint));
-      if(jarPointIndex && jarPointIndex >= 0) {
+      if(jarPointIndex !== undefined && jarPointIndex >= 0) {
         this.handleClickOnJarEditPoint(jarPointIndex, clickEvent.button);
         return;
       }
@@ -240,37 +258,65 @@ export default class Main {
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
 
     this.world.on('impact', ({ bodyA, bodyB }) => {
-      console.log('impact!!')
-      console.log('bodyA: ', bodyA);
-      console.log('bodyB: ', bodyB);
-      // Two separate loops to find only the first match for each body
-      // and to only play 1 sound at a time
+      let dropA;
+      let dropIndexA = 0;
+      let dropB;
+      let dropIndexB = 0;
+
       for(let i = 0; i < this.drops.length; i++) {
         if(this.drops[i].body === bodyA) {
-          console.log(1)
-          if(this.drops[i].isFirstImpact) {
-            console.log(2)
-            this.audio.play('button-drop');
-            this.drops[i].isFirstImpact = false;
-            return;
-          } 
+          dropA = this.drops[i];
+          dropIndexA = i;
+          continue;
+        }
 
+        if(this.drops[i].body === bodyB) {
+          dropB = this.drops[i];
+          dropIndexB = i;
+        }
+
+        if(dropA && dropB) {
           break;
         }
       }
 
-      for(let i = 0; i < this.drops.length; i++) {
-        if(this.drops[i].body === bodyB) {
-          console.log(3)
-          if(this.drops[i].isFirstImpact) {
-            console.log(4)
-            this.audio.play('button-drop');
-            this.drops[i].isFirstImpact = false;
-            return;
-          } 
+      // only play for 1 drop at a time
+      //if(dropA?.isFirstImpact) {
+      if(dropA && dropIndexA === this.drops.length - 1) {
+        this.audio.play('button-drop');
+        dropA.isFirstImpact = false;
+      // } else if(dropB?.isFirstImpact) {
+      } else if(dropB && dropIndexB === this.drops.length - 1) {
+        this.audio.play('button-drop');
+        dropB.isFirstImpact = false;
+      }
+      
+      if(
+        dropA?.color.substring(0, 1) === '#' &&
+        dropB?.color.substring(0, 1) === '#' &&
+        areColorsClose(dropA.color, dropB.color)
+      ) {
+        dropA.remove(this.world);
+        dropB.remove(this.world);
+        this.drops.splice(dropIndexA, 1);
+        this.drops.splice(dropIndexA < dropIndexB ? dropIndexB - 1 : dropIndexB, 1);
 
-          break;
-        }
+        // check which button is bigger
+        // add the new button at the same location as the 
+        //   bigger button with the same diameter. Then, 
+        //   make the button grow until its diameter matches 
+        //   the sum of the diameter of both buttons
+        const biggerDrop = dropA.shape.radius >= dropB.shape.radius ? dropA : dropB;
+        this.addDrop({
+          color: dropA.color,
+          diameter: 2 * dropA.shape.radius,
+          dropPoint: {
+            x: biggerDrop.x,
+            y: biggerDrop.y
+          },
+          maxRadius: dropA.shape.radius + dropB.shape.radius,
+        });
+        this.audio.play('button-merge');
       }
     });
 

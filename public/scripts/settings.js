@@ -11,6 +11,7 @@ const config = {
     minDiameter: document.getElementById('drops-diameter-min'),
     maxDiameter: document.getElementById('drops-diameter-max'),
     diameterDistribution: document.getElementById('drops-diameter-distribution'),
+    recoverDrops: document.getElementById('drops-recover'),
 }
 
 const actions = {
@@ -69,6 +70,13 @@ export function initSettings(configData) {
             pubSub.publish('on-change-diameter-distribution', {
                 diameterDistribution: event.target.value,
             });
+        }
+    }
+
+    if(config.recoverDrops) {
+        config.recoverDrops.checked = configData.recoverDrops;
+        config.recoverDrops.onchange = (event) => {
+            pubSub.publish('on-change-recover-drops', event.target.checked);
         }
     }
 }

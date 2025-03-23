@@ -5,8 +5,8 @@ const svgToPng = async (svgString) => {
     const svgImage = await loadImage(svgUrl);
 
     const canvas = document.createElement('canvas');
-    canvas.width = 24;
-    canvas.height = 24;
+    canvas.width = 512;
+    canvas.height = 512;
     const context = canvas.getContext('2d');
     context.drawImage(svgImage, 0, 0);
     const imgData = canvas.toDataURL('image/png');

@@ -1,6 +1,7 @@
-import Block from './classes/Block.js';
-import Board from './classes/Board.js';
-import Position from './classes/Position.js';
+import Circle from '../public/scripts/classes/Circle.js';
+import Rect from '../public/scripts/classes/Rect.js';
+import {isCircleInRect} from '../public/scripts/utils/geometry.js';
+import * as p2 from '../public/scripts/libraries/p2.min.js';
 
 const toRawType = (value) => {
   let _toString = Object.prototype.toString;
@@ -74,84 +75,40 @@ const it = (description, test) => {
   }
 }
 
-describe('Test Block', () => {
-  it('.rotation: when rotating then get expected shape', () => {
-    const block1 = new Block([[1, 1]], null, null, null);
-    const block2 = new Block([[1, 1], [1, 0]], null, null, null);
-    const block3 = new Block([
-    [0, 1, 1], 
-    [1, 1, 0], 
-    [1, 0, 0]], null, null, null);
-
-    block1.rotate(1);
-    block2.rotate(1);
-    block3.rotate(1);
-    expect(block1.shape).toBe([[1], [1]]);
-    expect(block2.shape).toBe([[1, 1], [0, 1]]);
-    expect(block3.shape).toBe([
-    [1, 1, 0], 
-    [0, 1, 1], 
-    [0, 0, 1]]);
-
-    block1.rotate(1);
-    expect(block1.shape).toBe([[1, 1]]);
+describe('isCircleInRect', () => {
+  it('when circle is in rect, then return true', () => {
+    const screen = new Rect(100, 0, 200, 200, {});
+    const circle1 = new Circle(100, 100, 10, {});
+    const circle2 = new Circle(100, 200, 10, {});
+    const circle3 = new Circle(100, 205, 10, {});
+    const circle4 = new Circle(100, 0, 10, {});
+    const circle5 = new Circle(100, -5, 10, {});
+    const circle6 = new Circle(0, 100, 10, {});
+    const circle7 = new Circle(-5, 100, 10, {});
+    const circle8 = new Circle(5, 100, 10, {});
+    
+    expect(isCircleInRect(circle1, screen)).toBe(true);
+    expect(isCircleInRect(circle2, screen)).toBe(true);
+    expect(isCircleInRect(circle3, screen)).toBe(true);
+    expect(isCircleInRect(circle4, screen)).toBe(true);
+    expect(isCircleInRect(circle5, screen)).toBe(true);
+    expect(isCircleInRect(circle6, screen)).toBe(true);
+    expect(isCircleInRect(circle7, screen)).toBe(true);
+    expect(isCircleInRect(circle8, screen)).toBe(true);
   });
+
+  it('when circle is outside rect, then return false', () => {
+    const screen = new Rect(100, 0, 200, 200, {});
+    const circle1 = new Circle(100, 300, 10, {});
+    const circle2 = new Circle(100, -50, 10, {});
+    const circle3 = new Circle(-50, 100, 10, {});
+    const circle4 = new Circle(300, 100, 10, {});
+
+    expect(isCircleInRect(circle1, screen)).toBe(false);
+    expect(isCircleInRect(circle2, screen)).toBe(false);
+    expect(isCircleInRect(circle3, screen)).toBe(false);
+    expect(isCircleInRect(circle4, screen)).toBe(false);
+  })
 });
 
-describe('Test Board', () => {
-  it('creation: when new board is create then get expected grid', () => {
-    const board1 = new Board(3, 3);
-    const board2 = new Board(2, 4);
 
-    expect(board1.grid).toBe([[0, 0, 0],[0, 0, 0],[0, 0, 0]]);
-    expect(board2.grid).toBe([[0, 0],[0, 0],[0, 0], [0, 0]]);
-  });
-
-  it('.doesBlockFit: when blocks fit then return true', () => {
-    const board = new Board(3, 4);
-    const block1 = new Block([[1]]);
-    const block2 = new Block([[0, 1, 1], [1, 1, 0]]);
-    const block3 = new Block([[1, 0],[1, 0],[1, 1]]);
-
-    expect(board.doesBlockFits(block1, new Position(0, 0))).toBe(true);
-    expect(board.doesBlockFits(block1, new Position(0, 1))).toBe(true);
-    expect(board.doesBlockFits(block1, new Position(1, 0))).toBe(true);
-    expect(board.doesBlockFits(block1, new Position(1, 1))).toBe(true);
-    expect(board.doesBlockFits(block1, new Position(2, 1))).toBe(true);
-    expect(board.doesBlockFits(block2, new Position(0, 0))).toBe(true);
-    expect(board.doesBlockFits(block3, new Position(0, 1))).toBe(true);
-
-    board.addBlock(block1, new Position(2, 1));
-    expect(board.doesBlockFits(block2, new Position(0, 0))).toBe(true);
-  });
-
-  it('.doesBlockFit: when blocks does not fit then return false', () => {
-    const board = new Board(3, 4);
-    const block1 = new Block([[1]]);
-    const block2 = new Block([[0, 1, 1], [1, 1, 0]]);
-
-    expect(board.doesBlockFits(block1, new Position(4, 3))).toBe(false);
-
-    expect(board.doesBlockFits(block2, new Position(2, 0))).toBe(false);
-
-    board.addBlock(block1, new Position(2, 0));
-    board.addBlock(block2, new Position(0, 0))
-    expect(board.doesBlockFits(block2, new Position(0, 0))).toBe(false);
-  });
-
-  describe('.addBlock: ', () => {
-    it('when block is added and it fits, get expected grid', () => {
-      const board = new Board(3, 4);
-      const block = new Block([[0, 1, 1], [1, 1, 0]]);
-      board.addBlock(block, new Position(0, 0));
-      expect(board.grid).toBe([[0,1,1],[1,1,0],[0,0,0],[0,0,0]]);
-    });
-
-    it('when block is added, but does not fit, get expected grid', () => {
-      const board = new Board(2, 2);
-      const block = new Block([[0, 1, 1], [1, 1, 0]]);
-      board.addBlock(block, new Position(0, 0));
-      expect(board.grid).toBe([[0,0],[0,0]]);
-    })
-  });
-})

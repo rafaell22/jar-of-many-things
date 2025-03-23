@@ -117,7 +117,7 @@ export const getConvexPolygon = (coords) => {
  * @param {Rect} r
  * @returns {boolean}
  */
-  export const isCircleInRect = (c, r) => (c.x + 2 * c.radius) > (r.x - r.w / 2) ||
-  (c.x - 2 * c.radius) < (r.x + r.w / 2) ||
-  (c.y + 2 * c.radius) > (r.y) ||
+  export const isCircleInRect = (c, r) => (c.x + 2 * c.radius) > (r.x - r.w / 2) &&
+  (c.x - 2 * c.radius) < (r.x + r.w / 2) &&
+  (c.y + 2 * c.radius) > (r.y) &&
   (c.y - 2 * c.radius) < (r.y + r.h);

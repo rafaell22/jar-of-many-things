@@ -7,6 +7,8 @@ import Image from './Image.js';
 import pubSub from './PubSub.js';
 import Point from './Point.js';
 
+const PART_WIDTH = 30;
+
 export default class Jar {
   /**
    * @constructor
@@ -75,7 +77,6 @@ export default class Jar {
     this.editPoints = [];
     this.parts = [];
 
-    const w1 = 5;
     for(let i = 0; i < coords.length - 1; i++) {
       const a = coords[i];
       const b = coords[i + 1];
@@ -97,9 +98,9 @@ export default class Jar {
       const ox = cx
       const oy = cy - h / 2
 
-      // console.log(`a: ${a}, b: ${b}, cx: ${cx}, cy: ${cy}, ox: ${ox}, oy: ${oy}, w1: ${w1}, h: ${h}, alpha: ${alpha}`)
+      // console.log(`a: ${a}, b: ${b}, cx: ${cx}, cy: ${cy}, ox: ${ox}, oy: ${oy}, w1: ${PART_WIDTH}, h: ${h}, alpha: ${alpha}`)
       const part = {
-        shape: new Rect(ox, oy, w1, h, { isStatic: true, angle: radToDeg(alpha), strokeStyle: 'black', strokeWidth: 1, }),
+        shape: new Rect(ox, oy, PART_WIDTH, h, { isStatic: true, angle: radToDeg(alpha), strokeStyle: 'black', strokeWidth: 1, }),
         body: new Body(cx, cy, { isStatic: true, angle: radToDeg(alpha), }),
       };
       part.body.addShape(part.shape.shape);

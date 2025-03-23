@@ -14,6 +14,8 @@ export const DROP_TYPE = {
 const DEFAULT_MASS = 15;
 const DEFAULT_STROKE = 'black';
 const DEFAULT_STROKE_WIDTH = 1;
+const RADIUS_INCREASE_RATE = 1.05;
+const MAX_RETRIES = 2;
 
 export default class Drop {
   /**
@@ -37,12 +39,17 @@ export default class Drop {
    * @param {boolean} [options.isStatic]
    * @param {string} [options.stroke]
    * @param {number} [options.strokeWidth]
+   * @param {number} [options.maxRadius]
+   * @param {number} [options.retries]
    */
-  constructor(x, y, w, h, type, world, imgConfig, options = {}) {
+  constructor(x, y, w, h, type, world, imgConfig, color, options = {}) {
     this._body = new Body(x, y, options);
     this.image = new Image(x + imgConfig.x, y + imgConfig.y, imgConfig.w, imgConfig.h, imgConfig.src, { angle: imgConfig.angle });
     this.image.load();
     this.type = type;
+    this.color = color;
+    this.maxRadius = options.maxRadius;
+    this.retries = options.retries ?? 0;
 
     switch(type) {
       case DROP_TYPE.RECT:
@@ -59,15 +66,47 @@ export default class Drop {
     this.isFirstImpact = true;
   }
 
+  canRetry() {
+    return this.retries < MAX_RETRIES;
+  }
+
   get body() {
     return this._body.body;
   }
 
+  get x() {
+    return this.shape.x;
+  }
+
+  set x(x) {
+    this._body.x = this.shape.x = this.image.x = x;
+  }
+
+  get y() {
+    return this.shape.y;
+  }
+
+  set y(y) {
+    this._body.y = this.shape.y = y;
+    this.image.y = this.type === DROP_TYPE.CIRCLE ? y - this.shape.radius : y;
+  }
+
   update() {
     this._body.update();
-    this.shape.x = this.image.x = this._body.x;
-    this.shape.y = this._body.y;
-    this.image.y = this.type === DROP_TYPE.CIRCLE ? this._body.y - this.shape.radius : this._body.y;
+
+    if(this.maxRadius) {
+      this.shape.radius = Math.min(this.shape.radius * RADIUS_INCREASE_RATE, this.maxRadius);
+      this.image.w = 2 * this.shape.radius;
+      this.image.h = 2 * this.shape.radius;
+      this._body.y += 2;
+
+      if(this.shape.radius === this.maxRadius) {
+        this.maxRadius = null;
+      }
+    }
+
+    this.x = this._body.x;
+    this.y = this._body.y;
 
     this.image.rotation = this._body.rotation;
   }
