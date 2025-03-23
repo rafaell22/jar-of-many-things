@@ -281,14 +281,20 @@ export default class Main {
       }
 
       // only play for 1 drop at a time
-      //if(dropA?.isFirstImpact) {
-      if(dropA && dropIndexA === this.drops.length - 1) {
+      if(
+        dropA &&
+        dropIndexA === this.drops.length - 1 &&
+        dropA.audioPlays > 0
+      ) {
         this.audio.play('button-drop');
-        dropA.isFirstImpact = false;
-      // } else if(dropB?.isFirstImpact) {
-      } else if(dropB && dropIndexB === this.drops.length - 1) {
+        dropA.audioPlays--;
+      } else if(
+        dropB && 
+        dropIndexB === this.drops.length - 1 &&
+        dropB.audioPlays > 0
+      ) {
         this.audio.play('button-drop');
-        dropB.isFirstImpact = false;
+        dropB.audioPlays--;
       }
       
       if(

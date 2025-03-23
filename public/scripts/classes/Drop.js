@@ -16,6 +16,8 @@ const DEFAULT_STROKE = 'black';
 const DEFAULT_STROKE_WIDTH = 1;
 const RADIUS_INCREASE_RATE = 1.05;
 const MAX_RETRIES = 2;
+const MAX_COLLISION_AUDIO_PLAYS = 10;
+const MAX_DROP_RADIUS = 80;
 
 export default class Drop {
   /**
@@ -50,7 +52,9 @@ export default class Drop {
     this.color = color;
     this.maxRadius = options.maxRadius;
     this.retries = options.retries ?? 0;
+    this.audioPlays = MAX_COLLISION_AUDIO_PLAYS;
 
+    w = w > MAX_DROP_RADIUS ? MAX_DROP_RADIUS : w;
     switch(type) {
       case DROP_TYPE.RECT:
         this.shape = new Rect(x, y, w, h, options);
@@ -62,8 +66,6 @@ export default class Drop {
 
     this._body.addShape(this.shape.shape);
     world.addBody(this.body);
-
-    this.isFirstImpact = true;
   }
 
   canRetry() {
@@ -100,7 +102,7 @@ export default class Drop {
       this.image.h = 2 * this.shape.radius;
       this._body.y += 2;
 
-      if(this.shape.radius === this.maxRadius) {
+      if(this.shape.radius === this.maxRadius || this.shape.radius >= MAX_DROP_RADIUS) {
         this.maxRadius = null;
       }
     }
