@@ -40,7 +40,7 @@ const createWindow = () => {
     }
   });
 
-  //win.webContents.openDevTools();
+  // win.webContents.openDevTools();
 
   win.loadFile('./public/index.html');
   win.setBackgroundColor('#00000000')

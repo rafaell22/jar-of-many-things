@@ -146,8 +146,17 @@ export default class Main {
     } else {
       buttonImgSrc = this.buttonImgCache[buttonColor] = await svgToPng(getButtonSvg(buttonColor));
     }
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: 40/((50 - diameter) / 5.71 + 1) , stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries });
     this.drops.push(drop);
+  }
+
+  /**
+    * @param {number} diameter
+    */
+  calculateMass(diameter) {
+    const MAXIMUM_MASS = 40;
+    const mass = 0.025 * diameter * diameter;
+    return Math.min(MAXIMUM_MASS, mass);
   }
 
   initWebsockets() {
@@ -302,10 +311,10 @@ export default class Main {
         dropB?.color.substring(0, 1) === '#' &&
         areColorsClose(dropA.color, dropB.color)
       ) {
-        dropA.remove(this.world);
-        dropB.remove(this.world);
         this.drops.splice(dropIndexA, 1);
         this.drops.splice(dropIndexA < dropIndexB ? dropIndexB - 1 : dropIndexB, 1);
+        dropA.remove(this.world);
+        dropB.remove(this.world);
 
         // check which button is bigger
         // add the new button at the same location as the 
@@ -315,12 +324,12 @@ export default class Main {
         const biggerDrop = dropA.shape.radius >= dropB.shape.radius ? dropA : dropB;
         this.addDrop({
           color: dropA.color,
-          diameter: 2 * dropA.shape.radius,
+          diameter: 2 * biggerDrop.shape.radius,
           dropPoint: {
             x: biggerDrop.x,
             y: biggerDrop.y
           },
-          maxRadius: dropA.shape.radius + dropB.shape.radius,
+          maxRadius: biggerDrop.shape.radius * 1.2,
         });
         this.audio.play('button-merge');
       }

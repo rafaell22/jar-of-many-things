@@ -27,8 +27,9 @@ const initLocalServer = () => {
 
   app.get('/jar/drop', (req, res) => {
     const color = req.query.color;
+    const diameter = req.query.diameter;
     if(wsClientRef) {
-      wsClientRef.send(`{"event":"drop", "data": { "color": ${color ? '"' + color + '"' : null} }}`);
+      wsClientRef.send(`{"event":"drop", "data": { "color": ${color ? '"' + color + '"' : null}, "diameter": ${diameter ? '"' + diameter + '"' : null } }}`);
     }
 
     res.send('OK');
