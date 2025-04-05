@@ -45,6 +45,7 @@ const DEFAULT_CONFIG = {
   chromaColor: '#00b140',
   uiColor: '#d4ce46',
   recoverDrops: true,
+  mergeDrops: true,
 };
 
 export default class DataManagement {
@@ -75,6 +76,7 @@ export default class DataManagement {
     pubSub.subscribe('on-change-max-diameter', this.onDropUpdated.bind(this));
     pubSub.subscribe('on-change-diameter-distribution', this.onDropUpdated.bind(this));
     pubSub.subscribe('on-change-recover-drops', this.onRecoverDropsUpdated.bind(this));
+    pubSub.subscribe('on-change-merge-drops', this.onMergeDropsUpdated.bind(this));
   }
 
   save() {
@@ -97,5 +99,9 @@ export default class DataManagement {
 
   onRecoverDropsUpdated(recoverDrops) {
     this.config.recoverDrops = recoverDrops ?? this.config.recoverDrops;
+  }
+
+  onMergeDropsUpdated(mergeDrops) {
+    this.config.mergeDrops = mergeDrops ?? this.config.mergeDrops;
   }
 }

@@ -12,6 +12,7 @@ const config = {
     maxDiameter: document.getElementById('drops-diameter-max'),
     diameterDistribution: document.getElementById('drops-diameter-distribution'),
     recoverDrops: document.getElementById('drops-recover'),
+    mergeDrops: document.getElementById('merge-drops'),
 }
 
 const actions = {
@@ -77,6 +78,13 @@ export function initSettings(configData) {
         config.recoverDrops.checked = configData.recoverDrops;
         config.recoverDrops.onchange = (event) => {
             pubSub.publish('on-change-recover-drops', event.target.checked);
+        }
+    }
+
+    if(config.mergeDrops) {
+        config.mergeDrops.checked = configData.mergeDrops;
+        config.mergeDrops.onchange = (event) => {
+            pubSub.publish('on-change-merge-drops', event.target.checked);
         }
     }
 }

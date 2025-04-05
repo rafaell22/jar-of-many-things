@@ -307,6 +307,7 @@ export default class Main {
       }
       
       if(
+        this.dataManagement.config.mergeDrops &&
         dropA?.color.substring(0, 1) === '#' &&
         dropB?.color.substring(0, 1) === '#' &&
         areColorsClose(dropA.color, dropB.color)
