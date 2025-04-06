@@ -3,6 +3,10 @@ import Circle from './Circle.js';
 import Rect from './Rect.js';
 import Image from './Image.js';
 
+const DEFAULT_FONT_FILL = 'black';
+const DEFAULT_FONT_STRIKE = 'white';
+const DEFAULT_FONT_WIDTH = 3;
+
 export default class Screen {
   constructor(w, h, bg, ctx) {
     this.w = w;
@@ -140,11 +144,32 @@ export default class Screen {
     * @param {number} x
     * @param {number} y
     * @param {string} content
+    * @param {object} [options]
+    * @param {number} [options.fontSize]
+    * @param {string} [options.fontColor]
     */
-  fillText(x, y, content) {
-    const screenCoords = this.worldToScreen(x, y);
-    this.ctx.fillStyle = 'black';
+  fillText(x, y, content, options = {}) {
+    const screenCoords = this.worldToScreen([x, y]);
+    this.ctx.font = `${ options.fontSize ?? 48 }px "Roboto"`;
+    this.ctx.fillStyle = `${ options.fontSize ?? DEFAULT_FONT_FILL }`;
     this.ctx.fillText(content, screenCoords[0], screenCoords[1])
+  }
+
+  /**
+    * @param {number} x
+    * @param {number} y
+    * @param {string} content
+    * @param {object} [options]
+    * @param {number} [options.fontSize]
+    * @param {string} [options.fontColor]
+    * @param {number} [options.fontWidth]
+    */
+  strokeText(x, y, content, options = {}) {
+    const screenCoords = this.worldToScreen([x, y]);
+    this.ctx.font = `${ options.fontSize ?? 48 }px "Roboto"`;
+    this.ctx.strokeStyle = `${ options.fontColor ?? DEFAULT_FONT_STRIKE }`;
+    this.ctx.lineWidth = options.fontWidth ?? DEFAULT_FONT_WIDTH;
+    this.ctx.strokeText(content, screenCoords[0], screenCoords[1])
   }
 
   drawGrid() {

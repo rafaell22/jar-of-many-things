@@ -17,19 +17,12 @@ const initLocalServer = () => {
 
   // app.use('/jar', express.static(path.join(__dirname, 'public')));
 
-  app.post('/jar/drop', (req, res) => {
-    if(wsClientRef) {
-      wsClientRef.send('{"event":"drop"}')
-    }
-
-    res.send('OK');
-  });
-
   app.get('/jar/drop', (req, res) => {
     const color = req.query.color;
     const diameter = req.query.diameter;
+    const username = req.query.username;
     if(wsClientRef) {
-      wsClientRef.send(`{"event":"drop", "data": { "color": ${color ? '"' + color + '"' : null}, "diameter": ${diameter ? '"' + diameter + '"' : null } }}`);
+      wsClientRef.send(`{"event":"drop", "data": { "color": ${ color ? '"' + color + '"' : null}, "diameter": ${ diameter ? '"' + diameter + '"' : null }, "username": ${ username ? '"' + username + '"' : null } }}`);
     }
 
     res.send('OK');

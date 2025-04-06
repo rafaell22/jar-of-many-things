@@ -1,6 +1,8 @@
+import { SECOND } from '../utils/time.js';
 import Body from './Body.js';
 import Circle from './Circle.js';
 import Image from './Image.js';
+import Screen from './Screen.js';
 
 /**
  * @readonly
@@ -17,6 +19,8 @@ const DEFAULT_STROKE_WIDTH = 1;
 const RADIUS_INCREASE_RATE = 1.05;
 const MAX_RETRIES = 2;
 const MAX_COLLISION_AUDIO_PLAYS = 10;
+const TIME_TO_SHOW_USERNAME = 5 * SECOND; // ms
+const USERNAME_FONT_SIZE = 32;
 
 export default class Drop {
   /**
@@ -40,8 +44,9 @@ export default class Drop {
    * @param {boolean} [options.isStatic]
    * @param {string} [options.stroke]
    * @param {number} [options.strokeWidth]
-   * @param {number} [options.maxRadius]
+   * @param {number} [optiothisArgns.maxRadius]
    * @param {number} [options.retries]
+   * @param {string} [options.username]
    */
   constructor(x, y, w, h, type, world, imgConfig, color, options = {}) {
     this._body = new Body(x, y, options);
@@ -54,9 +59,6 @@ export default class Drop {
     this.audioPlays = MAX_COLLISION_AUDIO_PLAYS;
 
     switch(type) {
-      case DROP_TYPE.RECT:
-        this.shape = new Rect(x, y, w, h, options);
-        break;
       case DROP_TYPE.CIRCLE:
         this.shape = new Circle(x, y + w / 2 , w / 2, options);
         break;
@@ -66,6 +68,9 @@ export default class Drop {
     world.addBody(this.body);
 
     this.isActive = true;
+
+    this.username = options.username;
+    setTimeout((() => this.username = null).bind(this), TIME_TO_SHOW_USERNAME)
   }
 
   canRetry() {
@@ -85,7 +90,7 @@ export default class Drop {
   }
 
   get y() {
-    return this.shape.y;
+    return this.shape.y;0.
   }
 
   set y(y) {
@@ -117,6 +122,9 @@ export default class Drop {
     this.image.rotation = this._body.rotation;
   }
 
+  /**
+    * @param {Screen} screen
+    */
   draw(screen) {
     if(!this.isActive) {
       return;
@@ -125,6 +133,11 @@ export default class Drop {
     // this.shape.draw(screen);
     if(this.image.loaded) {
       this.image.draw(screen);
+    }
+
+    if(this.username) {
+      screen.strokeText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE });
+      screen.fillText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE });
     }
   }
 

@@ -132,6 +132,7 @@ export default class Main {
     * @param {number} data.dropPoint.y
     * @param {number} [data.maxRadius]
     * @param {number} [data.retries]
+    * @param {string} [data.username]
     */
   async addDrop(data) {
     const diameter = data?.diameter ?? randomIntBetween(
@@ -146,7 +147,7 @@ export default class Main {
     } else {
       buttonImgSrc = this.buttonImgCache[buttonColor] = await svgToPng(getButtonSvg(buttonColor));
     }
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries, username: data?.username });
     this.drops.push(drop);
   }
 
