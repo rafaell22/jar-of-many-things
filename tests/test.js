@@ -1,7 +1,12 @@
 import Circle from '../public/scripts/classes/Circle.js';
 import Rect from '../public/scripts/classes/Rect.js';
+import Rgb from '../public/scripts/classes/Rgb.js';
+import Hsl from '../public/scripts/classes/Hsl.js';
+
 import {isCircleInRect} from '../public/scripts/utils/geometry.js';
 import * as p2 from '../public/scripts/libraries/p2.min.js';
+import { randomIntBetween } from '../public/scripts/utils/math.js';
+import {areColorsClose} from '../public/scripts/utils/colors.js';
 
 const toRawType = (value) => {
   let _toString = Object.prototype.toString;
@@ -109,6 +114,122 @@ describe('isCircleInRect', () => {
     expect(isCircleInRect(circle3, screen)).toBe(false);
     expect(isCircleInRect(circle4, screen)).toBe(false);
   })
+});
+
+describe('Rgb', () => {
+  describe('instantiate', () => {
+    it('when instantiated, then create Rgb instance', () => {
+      const r = randomIntBetween(0, 255);
+      const g = randomIntBetween(0, 255);
+      const b = randomIntBetween(0, 255);
+      const rgb = new Rgb(r, g, b);
+
+      expect(rgb.r).toBe(r);
+      expect(rgb.g).toBe(g);
+      expect(rgb.b).toBe(b);
+    });
+  })
+
+  describe('toString', () => {
+    it('when parsed to string, then return string in format rgb(r,g,b)', () => {
+      const r = randomIntBetween(0, 255);
+      const g = randomIntBetween(0, 255);
+      const b = randomIntBetween(0, 255);
+      const rgb = new Rgb(r, g, b);
+
+      expect(rgb.toString()).toBe(`rgb(${r},${g},${b})`);
+    });
+  });
+
+  describe('toHex', () => {
+    it('when parsed to hex, then return string in format #rrggbb', () => {
+      const rgb = new Rgb(29, 28, 40);
+
+      expect(rgb.toHex()).toBe('#1d1c28');
+    });
+  });
+
+  describe('toHsl', () => {
+    it('when parsed to Hsl, then return Hsl instance', () => {
+      const rgb = new Rgb(135, 176, 217);
+      const hsl = rgb.toHsl();
+
+      expect(hsl.h).toBe(210);
+      expect(hsl.s).toBe(52);
+      expect(hsl.l).toBe(69);
+    });
+  });
+
+  describe('fromHex', () => {
+    it('when a hex string is received, then returns Rgb instance', () => {
+      const h = '#c8dc19';
+      const rgb = Rgb.fromHex(h);
+
+      expect(rgb.r).toBe(200);
+      expect(rgb.g).toBe(220);
+      expect(rgb.b).toBe(25);
+    });
+  });
+});
+
+describe('Hsl', () => {
+  describe('instantiate', () => {
+    it('when instantiated, then create Hsl instance', () => {
+      const h = randomIntBetween(0, 360);
+      const s = randomIntBetween(0, 100);
+      const l = randomIntBetween(0, 100);
+      const hsl = new Hsl(h, s, l);
+
+      expect(hsl.h).toBe(h);
+      expect(hsl.s).toBe(s);
+      expect(hsl.l).toBe(l);
+    });
+  })
+
+  describe('toString', () => {
+    it('when parsed to string, then return string in format hsl(h,s%,l%)', () => {
+      const h = randomIntBetween(0, 360);
+      const s = randomIntBetween(0, 100);
+      const l = randomIntBetween(0, 100);
+      const hsl = new Hsl(h, s, l);
+
+      expect(hsl.toString()).toBe(`hsl(${h},${s}%,${l}%)`);
+    });
+  });
+
+  describe('toRgb', () => {
+    it('when parsed to Rgb, then return Rgb instance', () => {
+      const hsl = new Hsl(210, 52, 69);
+      const rgb = hsl.toRgb();
+
+      expect(rgb.r).toBe(135);
+      expect(rgb.g).toBe(176);
+      expect(rgb.b).toBe(217);
+    });
+  });
+});
+
+describe('Color Utils', () => {
+  it('areColorsClose', () => {
+    it('when color hues difference is less than the threshhold, then return true', () => {
+      const h1 = '#c8c814';
+      const h2 = '#404018';
+      const h3 = '#73b41e';
+      const h4 = '#587818';
+
+      expect(areColorsClose(h1, h2)).toBe(true);
+      expect(areColorsClose(h3, h4, 10)).toBe(true);
+    });
+
+    it('when color hues difference is more than the threshhold, then return false', () => {
+      const h1 = '#c8c814';
+      const h3 = '#73b41e';
+      const h4 = '#587818';
+
+      expect(areColorsClose(h1, h3, 5)).toBe(false);
+      expect(areColorsClose(h3, h4, 5)).toBe(false);
+    });
+  });
 });
 
 

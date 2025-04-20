@@ -20,7 +20,8 @@ import {initSettings} from '../settings.js';
 import {initToolbar} from '../toolbar.js';
 import {svgToPng} from '../utils/svgToImg.js';
 import getButtonSvg from '../../assets/getButtonSvg.js';
-import {areColorsClose, rgbToHex} from '../utils/colors.js';
+import { areColorsClose, COLOR_MERGING_TYPE, mergeHexColors } from '../utils/colors.js';
+import Rgb from './Rgb.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -56,9 +57,9 @@ export default class Main {
     this.dataManagement = new DataManagement();
     this.configLoadedSub = pubSub.subscribe('on-config-loaded', this.onConfigLoaded.bind(this));
 
-    this.buttonImgCache = {};
+    this.imgCache = {};
 
-    this.audio = new Audio(['button-drop', 'button-merge']);
+    this.audio = new Audio(['collide', 'merge']);
   }
 
   onConfigLoaded() {
@@ -140,14 +141,14 @@ export default class Main {
       this.dataManagement.config.drops[0].diameter.max, 
       this.dataManagement.config.drops[0].diameter.distribution, 2);
     const dropPoint = data?.dropPoint ? new Point(data.dropPoint.x, data.dropPoint.y) : this.dropArea?.randomPoint();
-    const buttonColor = data?.color || rgbToHex(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255));
-    let buttonImgSrc;
-    if(this.buttonImgCache[buttonColor]) {
-      buttonImgSrc = this.buttonImgCache[buttonColor];
+    const dropColor = data?.color || (new Rgb(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255))).toHex();
+    let imgSource;
+    if(this.imgCache[dropColor]) {
+      imgSource = this.imgCache[dropColor];
     } else {
-      buttonImgSrc = this.buttonImgCache[buttonColor] = await svgToPng(getButtonSvg(buttonColor));
+      imgSource = this.imgCache[dropColor] = await svgToPng(getButtonSvg(dropColor));
     }
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: buttonImgSrc}, buttonColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries, username: data?.username });
+    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: imgSource}, dropColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries, username: data?.username });
     this.drops.push(drop);
   }
 
@@ -257,17 +258,7 @@ export default class Main {
       }
   }
 
-  initEditEventListeners() {
-    this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
-    this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
-    pubSub.subscribe('on-edit-jar', this.onEdit.bind(this));
-    pubSub.subscribe('on-cancel-edit-jar', this.onCancel.bind(this));
-    pubSub.subscribe('on-save-settings', this.onSaveSettings.bind(this));
-    pubSub.subscribe('on-reset-jar', this.onReset.bind(this));
-    pubSub.subscribe('on-drop', this.onDrop.bind(this));
-    pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
-
-    this.world.on('impact', ({ bodyA, bodyB }) => {
+  onDropCollision({ bodyA, bodyB }) {
       let dropA;
       let dropIndexA = 0;
       let dropB;
@@ -291,26 +282,35 @@ export default class Main {
       }
 
       // only play for 1 drop at a time
-      if(
-        dropA &&
-        dropIndexA === this.drops.length - 1 &&
-        dropA.audioPlays > 0
-      ) {
-        this.audio.play('button-drop');
-        dropA.audioPlays--;
-      } else if(
-        dropB && 
-        dropIndexB === this.drops.length - 1 &&
-        dropB.audioPlays > 0
-      ) {
-        this.audio.play('button-drop');
-        dropB.audioPlays--;
+      if(dropA) {
+        const isDropATheLastDrop = dropIndexA === this.drops.length - 1;
+        const canDropAStillPlayAudio = dropA.audioPlays > 0;
+        if(
+          isDropATheLastDrop && 
+          canDropAStillPlayAudio
+        ) {
+          this.audio.play('collide');
+          dropA.audioPlays--;
+        } else if(dropB) {
+          const isDropBTheLastDrop = dropIndexB === this.drops.length - 1;
+          const canDropBStillPlayAudio = dropB.audioPlays > 0;
+          if(
+            dropB && 
+            isDropBTheLastDrop &&
+            canDropBStillPlayAudio
+          ) {
+            this.audio.play('collide');
+            dropB.audioPlays--;
+          }
+        }
       }
       
+      const isDropAColorHex = dropA?.color.substring(0, 1) === '#';
+      const isDropBColorHex = dropB?.color.substring(0, 1) === '#';
       if(
         this.dataManagement.config.mergeDrops &&
-        dropA?.color.substring(0, 1) === '#' &&
-        dropB?.color.substring(0, 1) === '#' &&
+        isDropAColorHex &&
+        isDropBColorHex &&
         areColorsClose(dropA.color, dropB.color)
       ) {
         this.drops.splice(dropIndexA, 1);
@@ -318,14 +318,14 @@ export default class Main {
         dropA.remove(this.world);
         dropB.remove(this.world);
 
-        // check which button is bigger
-        // add the new button at the same location as the 
-        //   bigger button with the same diameter. Then, 
-        //   make the button grow until its diameter matches 
-        //   the sum of the diameter of both buttons
+        // check which drop is bigger
+        // add the new drop at the same location as the 
+        //   bigger drop with the same diameter. Then, 
+        //   make the drop grow until its diameter matches 
+        //   the sum of the diameter of both drops
         const biggerDrop = dropA.shape.radius >= dropB.shape.radius ? dropA : dropB;
         this.addDrop({
-          color: dropA.color,
+          color: mergeHexColors(dropA.color, dropB.color, COLOR_MERGING_TYPE.AVERAGE),
           diameter: 2 * biggerDrop.shape.radius,
           dropPoint: {
             x: biggerDrop.x,
@@ -333,9 +333,21 @@ export default class Main {
           },
           maxRadius: biggerDrop.shape.radius * 1.2,
         });
-        this.audio.play('button-merge');
+        this.audio.play('merge');
       }
-    });
+    }
+
+  initEditEventListeners() {
+    this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
+    this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
+    pubSub.subscribe('on-edit-jar', this.onEdit.bind(this));
+    pubSub.subscribe('on-cancel-edit-jar', this.onCancel.bind(this));
+    pubSub.subscribe('on-save-settings', this.onSaveSettings.bind(this));
+    pubSub.subscribe('on-reset-jar', this.onReset.bind(this));
+    pubSub.subscribe('on-drop', this.onDrop.bind(this));
+    pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
+
+    this.world.on('impact', this.onDropCollision.bind(this));
 
     //@ts-ignore
     document.querySelector('#minimize-window').onclick = window.electronApi.minimizeWindow;
