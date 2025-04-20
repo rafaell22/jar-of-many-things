@@ -7,7 +7,7 @@ import Image from './Image.js';
 import pubSub from './PubSub.js';
 import Point from './Point.js';
 
-const PART_WIDTH = 30;
+const PART_WIDTH = 5;
 
 export default class Jar {
   /**

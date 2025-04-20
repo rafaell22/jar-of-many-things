@@ -65,6 +65,17 @@ body {
  * END - Height Layers
  */
 
+[data-tooltip]:hover::after {
+  display: block;
+  position: absolute;
+  content: attr(data-tooltip);
+  border: 1px solid black;
+  background: #eee;
+  padding: 2px;
+  color: #333;
+  transform: translate(-100%, -100%);
+}
+
 body {
   margin: 0;
 }
@@ -205,7 +216,7 @@ input[type="checkbox"] + label {
   }
 }
 
-#footer {
+#toolbar {
     position: absolute;
     right: 0;
     top: 24px;
@@ -214,7 +225,7 @@ input[type="checkbox"] + label {
     padding: 10px;
 }
 
-#footer>div {
+#toolbar>div {
     float: right;
     margin-bottom: 10px;
     color: var(--secondary-color);
@@ -222,7 +233,7 @@ input[type="checkbox"] + label {
     height: 32px;
 }
 
-#footer svg {
+#toolbar svg {
   fill: var(--secondary-color);
 }
 

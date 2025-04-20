@@ -16,7 +16,9 @@
 - ~~Add setting to toggle merge logic on/off~~
 - ~~Add a sound when hitting the jar and when hitting other drops~~
 - ~~Make buttons merge like Suika~~
-- Add a parameter to the GET request to get a string to show when button is dropping
+- ~~Add a parameter to the GET request to get a string to show when button is dropping~~
+- Add a "celebration" when number of drops reach a certain number/multiples of a number
+- Add a parameter to the request to trigger the celebration
 - Add a parameter to the GET request to have a specific button size (for example: when user check-ins X amounts of times, they get a bigger button)
 - Increase the size of all the objects in view and use transform/scale to try to increate the buttons resolution
 - Interrupt the updates (pause) when no new button. restart when there is a drop WS event
@@ -31,12 +33,6 @@
 - Make the frogs periodically jump around
 
 ## BUGS
-- Merging buttons gets janky now and then. Possible causes:
-    - Jar shape (buttons have nowhere to go). Options: Change shape of the jar and see if issues happen again
-    - Having a Body with dynamic size is messing up the phisycs calculations. Options: merge and then drop the button up top; look for how suika do it (since suika merges things of same size, there is more space)
-    - Big buttons have too much mass and they get too much momemtum when falling (maybe the formula for calculating weght has a problem?)
-    - When phisyc get crazy/janky, buttons visually disappear (render), but they are still part of the phisycs world(can see them when clicking to edit)
-    - When leaving edit mode, buttons continue with the red border
 
 ## IDEAS FOR OTHER PROJECTS
 ### TCG check-ins
@@ -49,4 +45,16 @@
 - Then do whatever you want with the data (to integrate/create other applications running locally)
 ### Task List
 - Task list integrated with streamer.bot and twitch chat commands
-
+### Chat overlay
+- Show twitch chat messages
+- Show emotes
+- Show username
+- Show username with color
+- Show badges
+### Stream Deck
+- Make an app or webpage to behave like a stream deck using a mobile device
+### Game VTuber
+- A game/app that is actually a vtuber viewer
+- Integrate with streaming deck
+### Twitch token generator
+### Idling game to play through chat commands

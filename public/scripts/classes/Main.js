@@ -17,7 +17,7 @@ import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
 import {initSettings} from '../settings.js';
-import {initFooter} from '../footer.js';
+import {initToolbar} from '../toolbar.js';
 import {svgToPng} from '../utils/svgToImg.js';
 import getButtonSvg from '../../assets/getButtonSvg.js';
 import {areColorsClose, rgbToHex} from '../utils/colors.js';
@@ -69,7 +69,7 @@ export default class Main {
     this.initWebsockets();
     initResizeEvent(this.canvas);
     initSettings(this.dataManagement.config);
-    initFooter();
+    initToolbar();
 
     pubSub.unsubscribe('on-config-loaded', this.configLoadedSub);
 
