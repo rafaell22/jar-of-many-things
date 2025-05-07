@@ -136,8 +136,8 @@ export default class Drop {
     }
 
     if(this.username) {
-      screen.strokeText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE });
-      screen.fillText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE });
+      screen.strokeText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE, fontColor: '#000000' });
+      screen.fillText(this.x + this.shape.radius + 5, this.y - this.shape.radius, this.username, { fontSize: USERNAME_FONT_SIZE, fontColor: '#000000' });
     }
   }
 

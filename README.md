@@ -31,6 +31,7 @@
 - Save button (for the state of the jar)
 - Make a vivarium that drops frogs
 - Make the frogs periodically jump around
+- Make suika like drops (so that chat is basically playing suika on check-in)
 
 ## BUGS
 
@@ -41,6 +42,8 @@
 - use bits to open more?
 - extension to display collection?
 - Trading?
+- Battle in chat
+- Battle on extension
 ### Extension to capture user click's
 - Then do whatever you want with the data (to integrate/create other applications running locally)
 ### Task List
@@ -58,3 +61,23 @@
 - Integrate with streaming deck
 ### Twitch token generator
 ### Idling game to play through chat commands
+### Chat tamagotchi
+- Digimon like evolutions
+- Different tasks open different options
+- Option to rebirth your pet so it can grow stronger
+- Experience through check-ins, channel point redeems, subs, gift subs, bits, ...
+- items to make them grow
+- cosmetics
+### Stream tamagotchi
+- Streamer chooses pet
+- Chat takes care of it through chat commands (!clean, !feed, !treat, ...)
+- Bits, subs, gift subs enable special options (special treats, change pet's clothing, ...)
+- Multiple rooms
+- Pet grows
+- Rewards based on how many tasks a chatter did in a period of time
+### Simple Text display for showing votes by chat
+- Left click adds
+- Right click subtracts
+- Double click edit text
+- Show button to add more voting options
+- Option to create new votes (keep old ones saved)

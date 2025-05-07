@@ -151,7 +151,7 @@ export default class Screen {
   fillText(x, y, content, options = {}) {
     const screenCoords = this.worldToScreen([x, y]);
     this.ctx.font = `${ options.fontSize ?? 48 }px "Roboto"`;
-    this.ctx.fillStyle = `${ options.fontSize ?? DEFAULT_FONT_FILL }`;
+    this.ctx.fillStyle = `${ options.fontColor ?? DEFAULT_FONT_FILL }`;
     this.ctx.fillText(content, screenCoords[0], screenCoords[1])
   }
 
