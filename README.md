@@ -81,3 +81,18 @@
 - Double click edit text
 - Show button to add more voting options
 - Option to create new votes (keep old ones saved)
+### Create dial to measure chat's response like a hot-n-cold/board game wavelength
+- add values based on chat messages (example: put 1 for agree, 2 to disagree)
+- add scale for gradual ratings (example: rate this toast from 1 to 5)
+### Tetris like overlay that drops pieces according to chat interactions
+- Random pieces at random locations with random rotations
+- Allow to match user color
+- Allow "special" golden pieces for special redeems/donations
+- Add username to the piece
+- Allow user to move/relocate pieces. 
+- Add physics to pieces
+### Planets pulls solar system
+- Count how many pulls of each planet a person has and then display a mock of the solar system with each amount orbiting around the sun
+### Cheese tower
+- User redeems cheese, then cheese drops from top and make piles
+- How could it end up as a cheese lair? On redeem, user enters the x coordinate to try to pile them

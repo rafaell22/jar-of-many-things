@@ -40,11 +40,12 @@ export default class Drop {
    * @param {number} [imgConfig.angle]
    * @param {object} [options]
    * @param {number} options.mass
+   * @param {number} [options.maxRadius]
    * @param {number} [options.angle]
    * @param {boolean} [options.isStatic]
    * @param {string} [options.stroke]
    * @param {number} [options.strokeWidth]
-   * @param {number} [optiothisArgns.maxRadius]
+   * @param {number} [options.maxRadius]
    * @param {number} [options.retries]
    * @param {string} [options.username]
    */

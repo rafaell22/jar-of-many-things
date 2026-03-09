@@ -1,8 +1,6 @@
 // @ts-check
 import DataManagement from './DataManagement.js';
 import Jar from './Jar.js';
-import Drop from './Drop.js';
-import { DROP_TYPE } from './Drop.js';
 import Point from './Point.js';
 import EditPoint from './EditPoint.js';
 import Audio from './Audio.js';
@@ -12,16 +10,12 @@ import Screen from './Screen.js';
 import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
-import { randomIntBetween } from '../utils/math.js'
 import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
 import {initSettings} from '../settings.js';
 import {initToolbar} from '../toolbar.js';
-import {svgToPng} from '../utils/svgToImg.js';
-import getButtonSvg from '../../assets/getButtonSvg.js';
-import { areColorsClose, COLOR_MERGING_TYPE, mergeHexColors } from '../utils/colors.js';
-import Rgb from './Rgb.js';
+import DropsManager from './DropsManager.js';
 
 const p2 = /** @type {object} */ (globalThis).p2;
 
@@ -33,7 +27,6 @@ const MOUSE_BUTTONS = {
 
 export default class Main {
   constructor() {
-    this.drops = [];
     this.isEditing = false;
 
     this.canvas = /** @type {HTMLCanvasElement|null} */ (document.getElementById('world'));
@@ -60,12 +53,20 @@ export default class Main {
     this.imgCache = {};
 
     this.audio = new Audio(['collide', 'merge']);
+
+    this.dropsManager = new DropsManager(this.world, this.audio);
   }
 
   onConfigLoaded() {
     const jarConfig = this.dataManagement.config.jar;
     this.currentJar = new Jar(jarConfig?.coords ?? [], this.world, jarConfig?.image);
-    this.dropArea = new DropArea(this.dataManagement.config.dropArea.coords.map(p => new Point(p[0], p[1])))
+    this.dropsManager.setDropArea(new DropArea(this.dataManagement.config.dropArea.coords.map(p => new Point(p[0], p[1]))));
+    this.dropsManager.setDropsConfig(
+      {
+        ...this.dataManagement.config.drops[0],
+        recoverDrops: this.dataManagement.config.recoverDrops,
+        mergeDrops: this.dataManagement.config.mergeDrops,
+      });
     this.initEditEventListeners();
     this.initWebsockets();
     initResizeEvent(this.canvas);
@@ -84,31 +85,8 @@ export default class Main {
     // Move bodies forward in time
     this.world.step(this.FIXED_TIME_STEP, dt / 1000, this.MAX_SUB_STEPS);
 
-    const dropsToRemove = [];
-    for(let i = 0; i < this.drops.length; i++) {
-      if(!this.screen.isObjectInsideScreen(this.drops[i].shape)) {
-        this.drops[i].remove(this.world);
-        dropsToRemove.push(i);
-        continue;
-      } 
+    this.dropsManager.removeDropsOutsideScreen(this.screen, this.imgCache);
 
-      this.drops[i].update();
-    }
-
-
-    dropsToRemove.forEach(i => {
-      if(this.dataManagement.config.recoverDrops) {
-        const drop = this.drops[i];
-        if(drop?.canRetry()) {
-          this.addDrop({
-            color: drop.color,
-            diameter: 2 * drop.shape.radius,
-            retries: (drop.retries + 1),
-          });
-        }
-      }
-      this.drops.splice(i, 1)
-    });
     this.screen.clear();
     this.draw();
   };
@@ -116,40 +94,17 @@ export default class Main {
   draw() {
     if(this.isEditing) {
       this.screen.drawGrid();
-      this.dropArea?.draw(this.screen);
     }
-    this.drops.forEach(d => {
-      d.draw(this.screen);
-    });
+
+    this.dropsManager.draw(this.isEditing, this.screen)
     this.currentJar?.draw(this.screen);
   }
 
   /**
-    * @param {object} [data]
-    * @param {string} data.color
-    * @param {number} [data.diameter]
-    * @param {object} [data.dropPoint]
-    * @param {number} data.dropPoint.x
-    * @param {number} data.dropPoint.y
-    * @param {number} [data.maxRadius]
-    * @param {number} [data.retries]
-    * @param {string} [data.username]
+    * @param {import('../types/drops.types.js').DropData} [data]
     */
   async addDrop(data) {
-    const diameter = data?.diameter ?? randomIntBetween(
-      this.dataManagement.config.drops[0].diameter.min, 
-      this.dataManagement.config.drops[0].diameter.max, 
-      this.dataManagement.config.drops[0].diameter.distribution, 2);
-    const dropPoint = data?.dropPoint ? new Point(data.dropPoint.x, data.dropPoint.y) : this.dropArea?.randomPoint();
-    const dropColor = data?.color || (new Rgb(randomIntBetween(0, 255), randomIntBetween(0, 255), randomIntBetween(0, 255))).toHex();
-    let imgSource;
-    if(this.imgCache[dropColor]) {
-      imgSource = this.imgCache[dropColor];
-    } else {
-      imgSource = this.imgCache[dropColor] = await svgToPng(getButtonSvg(dropColor));
-    }
-    const drop = new Drop(dropPoint.x, dropPoint.y, diameter, diameter, DROP_TYPE.CIRCLE, this.world, {x: 0, y: 0, w: diameter, h: diameter, src: imgSource}, dropColor, { mass: this.calculateMass(diameter), stroke: 'black', strokeWidth: 1, maxRadius: data?.maxRadius, retries: data?.retries, username: data?.username });
-    this.drops.push(drop);
+    this.dropsManager.addDrop(this.imgCache, data);
   }
 
   /**
@@ -226,25 +181,21 @@ export default class Main {
         return;
       }
 
-      let isDropAreaBeingEdited = false;
-      let editPointIndex = 0;
-      for(let i = 0; i < this.dropArea?.editPoints.length; i++) {
-        const editPoint = this.dropArea?.editPoints[i];
-        if(isPointInCircle(new Point(...eventPoint), editPoint.shape)) {
-          isDropAreaBeingEdited = true;
-          editPointIndex = i;
-        }
-      }
+      let editPointIndex = this.dropsManager.getEditPointAtLocation(new Point(...eventPoint));
 
-      if(isDropAreaBeingEdited) {
-        this.addEditPointerEventListeners(this.dropArea?.editPoints[editPointIndex]);
+    if(editPointIndex >= 0) {
+        this.addEditPointerEventListeners(this.dropsManager.getEditPointByIndex(editPointIndex));
 
-        const onEditMoveSub = pubSub.subscribe('edit-point-move', (updatedEditPoint) => {
-          this.dropArea?.updateEditPoint(editPointIndex, updatedEditPoint);
-        }); 
+        const onEditMoveSub = pubSub.subscribe(
+          'edit-point-move', 
+          this.dropsManager.onDropAreaEditPointMove.bind(
+            this.dropsManager, 
+            editPointIndex
+          )
+        ); 
 
         const onEditCancelSub = pubSub.subscribe('edit-point-cancel', (prevPoint) => {
-          this.dropArea?.updateEditPoint(editPointIndex, prevPoint);
+          this.dropsManager.onCancelEditDropAreaEditPoint(editPointIndex, prevPoint);
           pubSub.unsubscribe('edit-point-move', onEditMoveSub);
           pubSub.unsubscribe('edit-point-cancel', onEditCancelSub);
           pubSub.unsubscribe('edit-point-end', onEditEndSub);
@@ -258,85 +209,6 @@ export default class Main {
       }
   }
 
-  onDropCollision({ bodyA, bodyB }) {
-      let dropA;
-      let dropIndexA = 0;
-      let dropB;
-      let dropIndexB = 0;
-
-      for(let i = 0; i < this.drops.length; i++) {
-        if(this.drops[i].body === bodyA) {
-          dropA = this.drops[i];
-          dropIndexA = i;
-          continue;
-        }
-
-        if(this.drops[i].body === bodyB) {
-          dropB = this.drops[i];
-          dropIndexB = i;
-        }
-
-        if(dropA && dropB) {
-          break;
-        }
-      }
-
-      // only play for 1 drop at a time
-      if(dropA) {
-        const isDropATheLastDrop = dropIndexA === this.drops.length - 1;
-        const canDropAStillPlayAudio = dropA.audioPlays > 0;
-        if(
-          isDropATheLastDrop && 
-          canDropAStillPlayAudio
-        ) {
-          this.audio.play('collide');
-          dropA.audioPlays--;
-        } else if(dropB) {
-          const isDropBTheLastDrop = dropIndexB === this.drops.length - 1;
-          const canDropBStillPlayAudio = dropB.audioPlays > 0;
-          if(
-            dropB && 
-            isDropBTheLastDrop &&
-            canDropBStillPlayAudio
-          ) {
-            this.audio.play('collide');
-            dropB.audioPlays--;
-          }
-        }
-      }
-      
-      const isDropAColorHex = dropA?.color.substring(0, 1) === '#';
-      const isDropBColorHex = dropB?.color.substring(0, 1) === '#';
-      if(
-        this.dataManagement.config.mergeDrops &&
-        isDropAColorHex &&
-        isDropBColorHex &&
-        areColorsClose(dropA.color, dropB.color)
-      ) {
-        this.drops.splice(dropIndexA, 1);
-        this.drops.splice(dropIndexA < dropIndexB ? dropIndexB - 1 : dropIndexB, 1);
-        dropA.remove(this.world);
-        dropB.remove(this.world);
-
-        // check which drop is bigger
-        // add the new drop at the same location as the 
-        //   bigger drop with the same diameter. Then, 
-        //   make the drop grow until its diameter matches 
-        //   the sum of the diameter of both drops
-        const biggerDrop = dropA.shape.radius >= dropB.shape.radius ? dropA : dropB;
-        this.addDrop({
-          color: mergeHexColors(dropA.color, dropB.color, COLOR_MERGING_TYPE.AVERAGE),
-          diameter: 2 * biggerDrop.shape.radius,
-          dropPoint: {
-            x: biggerDrop.x,
-            y: biggerDrop.y
-          },
-          maxRadius: biggerDrop.shape.radius * 1.2,
-        });
-        this.audio.play('merge');
-      }
-    }
-
   initEditEventListeners() {
     this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
     this.canvas.onpointerdown = this.onClickCanvas.bind(this); 
@@ -347,7 +219,7 @@ export default class Main {
     pubSub.subscribe('on-drop', this.onDrop.bind(this));
     pubSub.subscribe('change-chroma-color', this.updateScreenBackground.bind(this));
 
-    this.world.on('impact', this.onDropCollision.bind(this));
+    this.world.on('impact', this.dropsManager.onDropCollision.bind(this.dropsManager, this.imgCache));
 
     //@ts-ignore
     document.querySelector('#minimize-window').onclick = window.electronApi.minimizeWindow;
@@ -361,7 +233,7 @@ export default class Main {
     this.canvas?.classList.add('edit');
 
     this.currentJar?.edit();
-    this.dropArea?.edit();
+    this.dropsManager.editDropArea();
     this.isEditing = true;
     this.draw();
   }
@@ -371,7 +243,7 @@ export default class Main {
     
     this.isEditing = false;
     this.currentJar?.endEdit();
-    this.dropArea?.endEdit();
+    this.dropsManager.endDropAreaEdit();
   }
 
   onSaveSettings() {
@@ -379,10 +251,7 @@ export default class Main {
   }
 
   onReset() {
-    this.drops.forEach((d) => {
-      this.world.removeBody(d.body);
-    });
-    this.drops = [];
+    this.dropsManager.reset();
   }
 
   onDrop() {

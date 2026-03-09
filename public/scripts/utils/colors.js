@@ -40,9 +40,7 @@ function mergeHexColors(h1, h2, mergingType = COLOR_MERGING_TYPE.KEEP_FIRST) {
       return h2;
     case COLOR_MERGING_TYPE.AVERAGE:
       const hsl1 = Rgb.fromHex(h1).toHsl();
-      console.log('hsl1: ', hsl1);
       const hsl2 = Rgb.fromHex(h2).toHsl();
-      console.log('hsl2: ', hsl2);
 
       const averageHsl = new Hsl(
         Math.round((hsl1.h + hsl2.h) / 2),
@@ -54,8 +52,17 @@ function mergeHexColors(h1, h2, mergingType = COLOR_MERGING_TYPE.KEEP_FIRST) {
   }
 }
 
+/**
+ * @param {string|null} [value]
+ * @returns {boolean}
+ */
+function isValidHexColor(value) {
+  return value && (/#[a-fA-F0-9]{6}/.test(value));
+}
+
 export {
     areColorsClose,
     COLOR_MERGING_TYPE,
     mergeHexColors,
+    isValidHexColor,
 }
