@@ -1,5 +1,9 @@
 import Hsl from '../classes/Hsl.js';
 import Rgb from '../classes/Rgb.js';
+import { 
+  randomIntBetween,
+  decimalToHex,
+} from './math.js';
 
 /**
   * @param {string} h1 - in hex format "#000000"
@@ -60,9 +64,19 @@ function isValidHexColor(value) {
   return value && (/#[a-fA-F0-9]{6}/.test(value));
 }
 
+/**
+ * @returns {string}
+ */
+function randomColorString() {
+  const color = `#${decimalToHex(randomIntBetween(0, 255), 2)}${decimalToHex(randomIntBetween(0, 255), 2)}${decimalToHex(randomIntBetween(0, 255), 2)}`;
+  console.log(color)
+  return color;
+}
+
 export {
     areColorsClose,
     COLOR_MERGING_TYPE,
     mergeHexColors,
     isValidHexColor,
+    randomColorString,
 }

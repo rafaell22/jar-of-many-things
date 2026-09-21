@@ -45,3 +45,11 @@ export const randn_bm = (min, max, skew) => {
   }
   return num
 }
+
+/**
+ * @param {Number} value
+ * @param {Number} padding
+ */
+export const decimalToHex = (value, padding) => {
+  return Number(value).toString(16).padStart(padding, '0');
+}

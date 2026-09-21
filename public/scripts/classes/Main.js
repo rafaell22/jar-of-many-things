@@ -10,7 +10,7 @@ import Screen from './Screen.js';
 import pubSub from './PubSub.js';
 
 import { start } from '../mainloop.js';
-import { isPointInCircle, isPointInRect, rotateAround } from '../utils/geometry.js';
+import { isPointInRect, rotateAround } from '../utils/geometry.js';
 import { initResizeEvent } from '../resize.js';
 import DropArea from './DropArea.js';
 import {initSettings} from '../settings.js';
@@ -75,13 +75,13 @@ export default class Main {
 
     pubSub.unsubscribe('on-config-loaded', this.configLoadedSub);
 
-    start(this.start.bind(this));
+    start(this.update.bind(this));
   }
 
   /**
    * @param {number} dt - time in milliseconds since last execution
    */
-  start(dt) {
+  update(dt) {
     // Move bodies forward in time
     this.world.step(this.FIXED_TIME_STEP, dt / 1000, this.MAX_SUB_STEPS);
 

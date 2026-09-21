@@ -1,12 +1,13 @@
 export default class Body {
     constructor(x, y, options) {
-      const { mass, angle, isStatic } = options;
+      const { mass, angle, isStatic, gravityScale } = options;
       const rotation = angle * Math.PI / 180;
 
       const body = new p2.Body({
         mass: isStatic ? 0 : mass,
         position: [x, y],
         angle: - rotation,
+        gravityScale,
       });
 
       this.x = x;

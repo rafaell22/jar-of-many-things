@@ -5,7 +5,7 @@ import Drop, { DROP_TYPE } from './Drop.js';
 import Screen from './Screen.js';
 import DropArea from './DropArea.js';
 import EditPoint from './EditPoint.js';
-import { isValidHexColor, areColorsClose, mergeHexColors, COLOR_MERGING_TYPE } from '../utils/colors.js';
+import { isValidHexColor, areColorsClose, mergeHexColors, COLOR_MERGING_TYPE, randomColorString } from '../utils/colors.js';
 import { svgToPng } from '../utils/svgToImg.js';
 import getButtonSvg from '../../assets/getButtonSvg.js';
 import { randomIntBetween } from '../utils/math.js';
@@ -110,7 +110,8 @@ export default class DropsManager {
     const dropColor = isValidHexColor(data?.color) ? 
       // @ts-ignore
       data.color : 
-      '#eeeeee';
+      randomColorString()
+      //'#eeeeee';
     let imgSource;
     if(imgCache[dropColor]) {
       imgSource = imgCache[dropColor];
